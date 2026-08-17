@@ -2,7 +2,7 @@ import { serve } from "@hono/node-server";
 import { structuredLogger } from "@hono/structured-logger";
 import { Hono } from "hono";
 import { requestId } from "hono/request-id";
-import { logger } from "./logger/index.js";
+import { logger } from "@/logger";
 
 const app = new Hono();
 

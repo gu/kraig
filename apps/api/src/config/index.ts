@@ -1,11 +1,9 @@
 import { z } from "zod";
-import { logger } from "../logger/index.js";
+import { logger } from "@/logger";
 
 const ApiConfigSchema = z.object({
-  DB_URI: z.string(),
+  DATABASE_URL: z.string(),
 });
-
-export type ApiConfig = z.infer<typeof ApiConfigSchema>;
 
 try {
   process.loadEnvFile(".env");
@@ -19,4 +17,4 @@ try {
   logger.debug("Unable to load .env.local file. Skipping");
 }
 
-export const apiConfig: ApiConfig = ApiConfigSchema.parse(process.env);
+export const ApiConfig = ApiConfigSchema.parse(process.env);
