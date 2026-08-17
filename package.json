@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "license": "ISC",
+  "scripts": {
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check"
+  },
+  "devDependencies": {
+    "oxfmt": "^0.63.0",
+    "oxlint": "^1.78.0"
+  },
+  "packageManager": "pnpm@10.20.0"
+}
