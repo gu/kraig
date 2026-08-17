@@ -1,8 +1,11 @@
 import { z } from "zod";
 import { logger } from "@/logger";
+import { loadCfbdClient } from "./cfbd";
 
 const ApiConfigSchema = z.object({
   DATABASE_URL: z.string(),
+
+  CFBD_API_KEY: z.string(),
 });
 
 try {
@@ -18,3 +21,5 @@ try {
 }
 
 export const ApiConfig = ApiConfigSchema.parse(process.env);
+
+loadCfbdClient(ApiConfig.CFBD_API_KEY);

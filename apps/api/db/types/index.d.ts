@@ -10,11 +10,20 @@ export type Generated<T> =
     ? ColumnType<S, I | undefined, U>
     : ColumnType<T, T | undefined, T>;
 
-export interface ExtTeam {
+export interface ExtConference {
+  display_name_short: string;
   id: Generated<number>;
-  name: string;
+  slug: string;
+}
+
+export interface ExtTeam {
+  conference_id: number;
+  display_name: string;
+  id: Generated<number>;
+  slug: string;
 }
 
 export interface DB {
+  ext_conference: ExtConference;
   ext_team: ExtTeam;
 }

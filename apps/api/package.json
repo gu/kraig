@@ -10,6 +10,7 @@
   "dependencies": {
     "@hono/node-server": "^2.1.1",
     "@hono/structured-logger": "^1.0.0",
+    "cfbd": "^5.24.0",
     "hono": "^4.13.2",
     "kysely": "^0.29.5",
     "kysely-ctl": "^0.21.0",

@@ -3,6 +3,7 @@ import { structuredLogger } from "@hono/structured-logger";
 import { Hono } from "hono";
 import { requestId } from "hono/request-id";
 import { logger } from "@/logger";
+import extRoute from "./routes/ext";
 
 const app = new Hono();
 
@@ -18,6 +19,8 @@ app.use(
 app.get("/", (c) => {
   return c.text("Hello Hono!");
 });
+
+app.route("/ext", extRoute);
 
 serve(
   {

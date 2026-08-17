@@ -23,6 +23,9 @@ importers:
       '@hono/structured-logger':
         specifier: ^1.0.0
         version: 1.0.0(hono@4.13.2)
+      cfbd:
+        specifier: ^5.24.0
+        version: 5.24.0
       hono:
         specifier: ^4.13.2
         version: 4.13.2
@@ -226,6 +229,10 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@hey-api/client-fetch@0.6.0':
+    resolution: {integrity: sha512-FlhFsVeH8RxJe/nq8xUzxNbiOpe+GadxlD2pfvDyOyLdCTU4o/LRv46ZVWstaW7DgF4nxhI328chy3+AulwVXw==}
+    deprecated: Starting with v0.73.0, this package is bundled directly inside @hey-api/openapi-ts.
 
   '@hono/node-server@2.1.1':
     resolution: {integrity: sha512-ELuehkj5VCBdgEw9zs+ivkKwyzzUCSQuE96YmiPvn1ECBoZCczbFXJLeEGMTYjphP6gydh4pHMqEYPVMYUVgQg==}
@@ -622,6 +629,9 @@ packages:
   callsites@3.1.0:
     resolution: {integrity: sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ==}
     engines: {node: '>=6'}
+
+  cfbd@5.24.0:
+    resolution: {integrity: sha512-DjftNTZ90l68XAinIXKW60fubz1jTsmxxCV6QyPijVgaWXz0bADufLg4odlwKNAj/MvJiPjbqWvcif4yDW7m5w==}
 
   chalk@4.1.2:
     resolution: {integrity: sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==}
@@ -1149,6 +1159,8 @@ snapshots:
   '@esbuild/win32-x64@0.28.2':
     optional: true
 
+  '@hey-api/client-fetch@0.6.0': {}
+
   '@hono/node-server@2.1.1(hono@4.13.2)':
     dependencies:
       hono: 4.13.2
@@ -1371,6 +1383,10 @@ snapshots:
       rc9: 3.0.1
 
   callsites@3.1.0: {}
+
+  cfbd@5.24.0:
+    dependencies:
+      '@hey-api/client-fetch': 0.6.0
 
   chalk@4.1.2:
     dependencies:
