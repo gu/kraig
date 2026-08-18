@@ -3,24 +3,18 @@
  * Please do not edit it manually.
  */
 
-import type { ColumnType } from "kysely";
-
-export type Generated<T> =
-  T extends ColumnType<infer S, infer I, infer U>
-    ? ColumnType<S, I | undefined, U>
-    : ColumnType<T, T | undefined, T>;
-
 export interface ExtConference {
-  display_name_short: string;
-  id: Generated<number>;
-  slug: string;
+  abbreviation: string | null;
+  id: number;
+  name: string;
+  short_name: string;
 }
 
 export interface ExtTeam {
+  abbreviation: string;
   conference_id: number;
-  display_name: string;
-  id: Generated<number>;
-  slug: string;
+  id: number;
+  school: string;
 }
 
 export interface DB {
