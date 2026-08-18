@@ -4,7 +4,7 @@
  */
 
 export interface ExtConference {
-  abbreviation: string | null;
+  abbreviation: string;
   id: number;
   name: string;
   short_name: string;

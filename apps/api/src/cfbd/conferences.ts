@@ -2,7 +2,7 @@ import { getYear } from "date-fns";
 import { cfbdClient } from "./client";
 import z from "zod";
 
-const ConferenceSchema = z.object({
+const ConferenceResponseSchema = z.object({
   id: z.number(),
   name: z.string(),
   shortName: z.string(),
@@ -11,11 +11,20 @@ const ConferenceSchema = z.object({
   memberCount: z.number(),
 });
 
+const ConferenceSchema = ConferenceResponseSchema.extend({
+  abbreviation: z.string(),
+});
+
 type Conference = z.infer<typeof ConferenceSchema>;
 
-const ConferenceListSchema = z.array(ConferenceSchema);
-
-const AllowedConferenceAbbreviations = ["ACC", "B12", "B1G", "PAC", "SEC"];
+export const AllowedConferenceAbbreviations: readonly string[] = [
+  "ACC",
+  "B12",
+  "B1G",
+  "PAC",
+  "SEC",
+  "Ind",
+];
 
 export async function getConferences() {
   const rawResponse = await cfbdClient
@@ -26,16 +35,18 @@ export async function getConferences() {
     })
     .json();
 
-  const response = ConferenceListSchema.parse(rawResponse);
+  const response = z.array(ConferenceResponseSchema).parse(rawResponse);
 
   const validConferences: Conference[] = [];
 
   for (const conference of response) {
-    if (
-      conference.abbreviation &&
-      AllowedConferenceAbbreviations.includes(conference.abbreviation)
-    ) {
-      validConferences.push(conference);
+    const abbr = conference.abbreviation;
+
+    if (abbr && AllowedConferenceAbbreviations.includes(abbr)) {
+      validConferences.push({
+        ...conference,
+        abbreviation: abbr,
+      });
     }
   }
 
