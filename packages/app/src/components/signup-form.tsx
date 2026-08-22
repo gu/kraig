@@ -41,6 +41,11 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
     onSubmit: async ({ value }) => {
       try {
         await signUp({ data: { ...value } });
+        toast.add({
+          type: "success",
+          title: "Sign Up Successful",
+        });
+        navigate({ to: "/" });
       } catch (e) {
         console.log(e);
         toast.add({
@@ -48,11 +53,6 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
           title: "Sign Up error",
         });
       }
-      toast.add({
-        type: "success",
-        title: "Sign Up Successful",
-      });
-      navigate({ to: "/" });
     },
   });
 

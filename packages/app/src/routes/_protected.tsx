@@ -1,5 +1,6 @@
 import { createFileRoute, redirect, Outlet } from "@tanstack/react-router";
 import { getSession } from "@/lib/auth.functions";
+import { CurrentUserProvider } from "#/components/current-user";
 
 export const Route = createFileRoute("/_protected")({
   beforeLoad: async ({ location }) => {
@@ -12,5 +13,15 @@ export const Route = createFileRoute("/_protected")({
     }
     return { user: session.user };
   },
-  component: () => <Outlet />,
+  component: ProtectedRouteRoot,
 });
+
+function ProtectedRouteRoot() {
+  const { user } = Route.useRouteContext();
+
+  return (
+    <CurrentUserProvider user={user}>
+      <Outlet />
+    </CurrentUserProvider>
+  );
+}

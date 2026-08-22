@@ -1,204 +1,169 @@
+"use client";
+
 import * as React from "react";
 
-import { SearchForm } from "@/components/search-form";
-import { VersionSwitcher } from "@/components/version-switcher";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { NavMain } from "@/components/nav-main";
+import { NavProjects } from "@/components/nav-projects";
+import { NavUser } from "@/components/nav-user";
+import { TeamSwitcher } from "@/components/team-switcher";
 import {
   Sidebar,
   SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
+  SidebarFooter,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { ChevronRightIcon } from "lucide-react";
+import {
+  GalleryVerticalEndIcon,
+  AudioLinesIcon,
+  TerminalIcon,
+  TerminalSquareIcon,
+  BotIcon,
+  BookOpenIcon,
+  Settings2Icon,
+  FrameIcon,
+  PieChartIcon,
+  MapIcon,
+} from "lucide-react";
 
 // This is sample data.
 const data = {
-  versions: ["1.0.1", "1.1.0-alpha", "2.0.0-beta1"],
+  teams: [
+    {
+      name: "Acme Inc",
+      logo: <GalleryVerticalEndIcon />,
+      plan: "Enterprise",
+    },
+    {
+      name: "Acme Corp.",
+      logo: <AudioLinesIcon />,
+      plan: "Startup",
+    },
+    {
+      name: "Evil Corp.",
+      logo: <TerminalIcon />,
+      plan: "Free",
+    },
+  ],
   navMain: [
     {
-      title: "Getting Started",
+      title: "Playground",
       url: "#",
+      icon: <TerminalSquareIcon />,
+      isActive: true,
       items: [
         {
-          title: "Installation",
+          title: "History",
           url: "#",
         },
         {
-          title: "Project Structure",
+          title: "Starred",
+          url: "#",
+        },
+        {
+          title: "Settings",
           url: "#",
         },
       ],
     },
     {
-      title: "Build Your Application",
+      title: "Models",
       url: "#",
+      icon: <BotIcon />,
       items: [
         {
-          title: "Routing",
+          title: "Genesis",
           url: "#",
         },
         {
-          title: "Data Fetching",
-          url: "#",
-          isActive: true,
-        },
-        {
-          title: "Rendering",
+          title: "Explorer",
           url: "#",
         },
         {
-          title: "Caching",
-          url: "#",
-        },
-        {
-          title: "Styling",
-          url: "#",
-        },
-        {
-          title: "Optimizing",
-          url: "#",
-        },
-        {
-          title: "Configuring",
-          url: "#",
-        },
-        {
-          title: "Testing",
-          url: "#",
-        },
-        {
-          title: "Authentication",
-          url: "#",
-        },
-        {
-          title: "Deploying",
-          url: "#",
-        },
-        {
-          title: "Upgrading",
-          url: "#",
-        },
-        {
-          title: "Examples",
+          title: "Quantum",
           url: "#",
         },
       ],
     },
     {
-      title: "API Reference",
+      title: "Documentation",
       url: "#",
+      icon: <BookOpenIcon />,
       items: [
         {
-          title: "Components",
+          title: "Introduction",
           url: "#",
         },
         {
-          title: "File Conventions",
+          title: "Get Started",
           url: "#",
         },
         {
-          title: "Functions",
+          title: "Tutorials",
           url: "#",
         },
         {
-          title: "next.config.js Options",
-          url: "#",
-        },
-        {
-          title: "CLI",
-          url: "#",
-        },
-        {
-          title: "Edge Runtime",
+          title: "Changelog",
           url: "#",
         },
       ],
     },
     {
-      title: "Architecture",
+      title: "Settings",
       url: "#",
+      icon: <Settings2Icon />,
       items: [
         {
-          title: "Accessibility",
+          title: "General",
           url: "#",
         },
         {
-          title: "Fast Refresh",
+          title: "Team",
           url: "#",
         },
         {
-          title: "Next.js Compiler",
+          title: "Billing",
           url: "#",
         },
         {
-          title: "Supported Browsers",
-          url: "#",
-        },
-        {
-          title: "Turbopack",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Community",
-      url: "#",
-      items: [
-        {
-          title: "Contribution Guide",
+          title: "Limits",
           url: "#",
         },
       ],
     },
   ],
+  projects: [
+    {
+      name: "Design Engineering",
+      url: "#",
+      icon: <FrameIcon />,
+    },
+    {
+      name: "Sales & Marketing",
+      url: "#",
+      icon: <PieChartIcon />,
+    },
+    {
+      name: "Travel",
+      url: "#",
+      icon: <MapIcon />,
+    },
+  ],
 };
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar {...props}>
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <VersionSwitcher versions={data.versions} defaultVersion={data.versions[0]} />
-        <SearchForm />
+        <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
-      <SidebarContent className="gap-0">
-        {/* We create a collapsible SidebarGroup for each parent. */}
-        {data.navMain.map((item) => (
-          <Collapsible
-            key={item.title}
-            title={item.title}
-            defaultOpen
-            className="group/collapsible"
-          >
-            <SidebarGroup>
-              <SidebarGroupLabel
-                className="group/label text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                render={<CollapsibleTrigger />}
-              >
-                {item.title}{" "}
-                <ChevronRightIcon className="ml-auto transition-transform group-data-open/collapsible:rotate-90" />
-              </SidebarGroupLabel>
-              <CollapsibleContent>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {item.items.map((item) => (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton isActive={item.isActive} render={<a href={item.url} />}>
-                          {item.title}
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </CollapsibleContent>
-            </SidebarGroup>
-          </Collapsible>
-        ))}
+      <SidebarContent>
+        <NavMain items={data.navMain} />
+        <NavProjects projects={data.projects} />
       </SidebarContent>
+      <SidebarFooter>
+        <NavUser />
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );

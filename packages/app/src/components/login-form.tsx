@@ -38,6 +38,13 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
     onSubmit: async ({ value }) => {
       try {
         await login({ data: { ...value } });
+
+        toast.add({
+          type: "success",
+          title: "Login successful",
+        });
+
+        navigate({ to: "/" });
       } catch (e) {
         console.log(e);
         toast.add({
@@ -45,13 +52,6 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
           title: "Login error",
         });
       }
-
-      toast.add({
-        type: "success",
-        title: "Login successful",
-      });
-
-      navigate({ to: "/" });
     },
   });
 
