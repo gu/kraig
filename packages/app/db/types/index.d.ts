@@ -56,7 +56,7 @@ export interface ExtTeam {
 
 export interface Pool {
   created_at: Generated<Timestamp>;
-  display_id: Generated<string | null>;
+  display_id: Generated<string>;
   id: Generated<number>;
   name: string;
   owner_id: string;
