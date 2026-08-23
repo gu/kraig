@@ -39,7 +39,7 @@ const getPoolSheetsForUser = createServerFn({ method: "GET" })
 
 export function useSheets({ poolId, poolDisplayId }: { poolId?: number; poolDisplayId?: string }) {
   return useQuery({
-    queryKey: ["sheets", "user"],
+    queryKey: ["sheets", "user", poolId, poolDisplayId],
     queryFn: () => getPoolSheetsForUser({ data: { poolId, poolDisplayId } }),
     enabled:
       (poolId !== undefined && poolId !== null) ||

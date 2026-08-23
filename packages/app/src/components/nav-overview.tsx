@@ -23,7 +23,10 @@ export function NavOverview() {
         <SidebarMenuItem>
           <SidebarMenuButton
             onClick={() =>
-              navigate({ to: "/pool/$poolId", params: { poolId: currentPoolId.displayId } })
+              navigate({
+                to: "/pool/$poolDisplayId",
+                params: { poolDisplayId: currentPoolId.displayId },
+              })
             }
           >
             Dashboard

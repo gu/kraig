@@ -3,7 +3,6 @@
 import * as React from "react";
 
 import { NavSheets } from "#/components/nav-sheets";
-import { NavProjects } from "@/components/nav-projects";
 import { NavUser } from "@/components/nav-user";
 import { PoolSwitcher } from "#/components/pool-switcher";
 import {
@@ -13,31 +12,9 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { FrameIcon, PieChartIcon, MapIcon } from "lucide-react";
 import { CreatePoolDialog } from "./create-pool-dialog";
 import { NavOverview } from "./nav-overview";
 import { ClientOnly } from "@tanstack/react-router";
-
-// This is sample data.
-const data = {
-  projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: <FrameIcon />,
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: <PieChartIcon />,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: <MapIcon />,
-    },
-  ],
-};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -50,7 +27,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarContent>
           <NavOverview />
           <NavSheets />
-          <NavProjects projects={data.projects} />
         </SidebarContent>
         <SidebarFooter>
           <NavUser />

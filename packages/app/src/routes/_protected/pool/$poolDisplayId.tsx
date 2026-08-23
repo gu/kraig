@@ -1,10 +1,12 @@
 import { Cta34 } from "#/components/cta34";
 import { SheetRules } from "#/components/sheet-rules";
 import { Button } from "#/components/ui/button";
+import { toast } from "#/components/ui/toast";
 import { useSheets } from "#/hooks/use-sheets";
+import { queryClient } from "#/lib/query-client";
 import { authMiddleware } from "#/middleware/auth";
 import db from "@db/client";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import z from "zod";
 
@@ -33,18 +35,24 @@ const createEmptySheet = createServerFn({ method: "POST" })
         owner_id: userId,
         pool_id: pool.id,
       })
-      .returning(["id", "name", "owner_id"])
+      .returning(["id", "display_id", "name", "owner_id"])
       .executeTakeFirstOrThrow();
   });
 
 function PoolDashboard() {
   const { poolDisplayId } = Route.useParams();
+  const navigate = useNavigate();
 
   const { data: sheets } = useSheets({ poolDisplayId });
 
   const createHandler = async () => {
     const newSheet = await createEmptySheet({ data: { poolDisplayId } });
-    console.log(newSheet);
+    toast.add({
+      type: "success",
+      title: "Successfully created new sheet",
+    });
+    navigate({ to: "/sheet/$sheetDisplayId", params: { sheetDisplayId: newSheet.display_id } });
+    queryClient.invalidateQueries({ queryKey: ["sheets"] });
   };
 
   return (

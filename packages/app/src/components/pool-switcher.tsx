@@ -20,7 +20,8 @@ import { authMiddleware } from "#/middleware/auth";
 import db from "@db/client";
 import { useQuery } from "@tanstack/react-query";
 import { useCurrentPoolId } from "#/hooks/use-current-pool-id";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
+import { queryClient } from "#/lib/query-client";
 
 const getUserPools = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
@@ -37,6 +38,7 @@ const getUserPools = createServerFn({ method: "GET" })
   });
 
 export function PoolSwitcher() {
+  const router = useRouter();
   const navigate = useNavigate();
   const { currentPoolId, setCurrentPoolId } = useCurrentPoolId();
 
@@ -91,7 +93,12 @@ export function PoolSwitcher() {
                       key={pool.display_id}
                       onClick={() => {
                         setCurrentPoolId({ id: pool.id, displayId: pool.display_id });
-                        navigate({ to: "/pool/$poolId", params: { poolId: pool.display_id } });
+                        navigate({
+                          to: "/pool/$poolDisplayId",
+                          params: { poolDisplayId: pool.display_id },
+                        });
+                        router.invalidate();
+                        queryClient.invalidateQueries({ queryKey: ["pools"] });
                       }}
                       className="gap-2 p-2"
                     >
