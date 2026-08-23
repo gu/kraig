@@ -13,7 +13,7 @@ import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ProtectedIndexRouteImport } from './routes/_protected/index'
-import { Route as ProtectedPoolPoolIdRouteImport } from './routes/_protected/pool/$poolId'
+import { Route as ProtectedPoolPoolDisplayIdRouteImport } from './routes/_protected/pool/$poolDisplayId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const ProtectedRoute = ProtectedRouteImport.update({
@@ -35,11 +35,12 @@ const ProtectedIndexRoute = ProtectedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ProtectedRoute,
 } as any)
-const ProtectedPoolPoolIdRoute = ProtectedPoolPoolIdRouteImport.update({
-  id: '/pool/$poolId',
-  path: '/pool/$poolId',
-  getParentRoute: () => ProtectedRoute,
-} as any)
+const ProtectedPoolPoolDisplayIdRoute =
+  ProtectedPoolPoolDisplayIdRouteImport.update({
+    id: '/pool/$poolDisplayId',
+    path: '/pool/$poolDisplayId',
+    getParentRoute: () => ProtectedRoute,
+  } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -50,14 +51,14 @@ export interface FileRoutesByFullPath {
   '/': typeof ProtectedIndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
-  '/pool/$poolId': typeof ProtectedPoolPoolIdRoute
+  '/pool/$poolDisplayId': typeof ProtectedPoolPoolDisplayIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/': typeof ProtectedIndexRoute
-  '/pool/$poolId': typeof ProtectedPoolPoolIdRoute
+  '/pool/$poolDisplayId': typeof ProtectedPoolPoolDisplayIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
@@ -66,21 +67,21 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/_protected/': typeof ProtectedIndexRoute
-  '/_protected/pool/$poolId': typeof ProtectedPoolPoolIdRoute
+  '/_protected/pool/$poolDisplayId': typeof ProtectedPoolPoolDisplayIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/signup' | '/pool/$poolId' | '/api/auth/$'
+  fullPaths: '/' | '/login' | '/signup' | '/pool/$poolDisplayId' | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/signup' | '/' | '/pool/$poolId' | '/api/auth/$'
+  to: '/login' | '/signup' | '/' | '/pool/$poolDisplayId' | '/api/auth/$'
   id:
     | '__root__'
     | '/_protected'
     | '/login'
     | '/signup'
     | '/_protected/'
-    | '/_protected/pool/$poolId'
+    | '/_protected/pool/$poolDisplayId'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
@@ -121,11 +122,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedIndexRouteImport
       parentRoute: typeof ProtectedRoute
     }
-    '/_protected/pool/$poolId': {
-      id: '/_protected/pool/$poolId'
-      path: '/pool/$poolId'
-      fullPath: '/pool/$poolId'
-      preLoaderRoute: typeof ProtectedPoolPoolIdRouteImport
+    '/_protected/pool/$poolDisplayId': {
+      id: '/_protected/pool/$poolDisplayId'
+      path: '/pool/$poolDisplayId'
+      fullPath: '/pool/$poolDisplayId'
+      preLoaderRoute: typeof ProtectedPoolPoolDisplayIdRouteImport
       parentRoute: typeof ProtectedRoute
     }
     '/api/auth/$': {
@@ -140,12 +141,12 @@ declare module '@tanstack/react-router' {
 
 interface ProtectedRouteChildren {
   ProtectedIndexRoute: typeof ProtectedIndexRoute
-  ProtectedPoolPoolIdRoute: typeof ProtectedPoolPoolIdRoute
+  ProtectedPoolPoolDisplayIdRoute: typeof ProtectedPoolPoolDisplayIdRoute
 }
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedIndexRoute: ProtectedIndexRoute,
-  ProtectedPoolPoolIdRoute: ProtectedPoolPoolIdRoute,
+  ProtectedPoolPoolDisplayIdRoute: ProtectedPoolPoolDisplayIdRoute,
 }
 
 const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
