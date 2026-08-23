@@ -1,9 +1,8 @@
 import { sql, type Kysely } from "kysely";
 
-// `any` is required here since migrations should be frozen in time. alternatively, keep a "snapshot" db interface.
 export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
-    .createTable("pool")
+    .createTable("sheet")
     .addColumn("id", "serial", (col) => col.primaryKey())
     .addColumn("display_id", "uuid", (col) =>
       col
@@ -13,6 +12,9 @@ export async function up(db: Kysely<any>): Promise<void> {
     )
     .addColumn("name", "text", (col) => col.notNull())
     .addColumn("owner_id", "text", (col) => col.notNull().references("user.id").onDelete("cascade"))
+    .addColumn("pool_id", "integer", (col) =>
+      col.notNull().references("pool.id").onDelete("cascade"),
+    )
     .addColumn("created_at", "timestamptz", (col) => col.notNull().defaultTo(sql`now()`))
     .addColumn("updated_at", "timestamptz", (col) => col.notNull().defaultTo(sql`now()`))
     .execute();

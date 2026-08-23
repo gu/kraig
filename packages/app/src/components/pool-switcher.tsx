@@ -49,7 +49,8 @@ export function PoolSwitcher() {
     return null;
   }
 
-  const activePool = userPools.find((p) => p.display_id === currentPoolId) ?? userPools[0];
+  const activePool =
+    userPools.find((p) => p.display_id === currentPoolId?.displayId) ?? userPools[0];
 
   return (
     <SidebarMenu>
@@ -86,7 +87,7 @@ export function PoolSwitcher() {
                   {userPools.map((pool) => (
                     <DropdownMenuItem
                       key={pool.display_id}
-                      onClick={() => setCurrentPoolId(pool.display_id)}
+                      onClick={() => setCurrentPoolId({ id: pool.id, displayId: pool.display_id })}
                       className="gap-2 p-2"
                     >
                       <div className="flex size-6 items-center justify-center rounded-md border">

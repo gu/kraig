@@ -74,6 +74,16 @@ export interface Session {
   userId: string;
 }
 
+export interface Sheet {
+  created_at: Generated<Timestamp>;
+  display_id: Generated<string>;
+  id: Generated<number>;
+  name: string;
+  owner_id: string;
+  pool_id: number;
+  updated_at: Generated<Timestamp>;
+}
+
 export interface User {
   createdAt: Generated<Timestamp>;
   email: string;
@@ -100,6 +110,7 @@ export interface DB {
   ext_team: ExtTeam;
   pool: Pool;
   session: Session;
+  sheet: Sheet;
   user: User;
   verification: Verification;
 }
