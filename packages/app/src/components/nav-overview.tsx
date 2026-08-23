@@ -6,8 +6,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { useNavigate } from "@tanstack/react-router";
 
 export function NavOverview() {
+  const navigate = useNavigate();
   const { currentPoolId } = useCurrentPoolId();
 
   if (!currentPoolId) {
@@ -19,7 +21,19 @@ export function NavOverview() {
       <SidebarGroupLabel>Overview</SidebarGroupLabel>
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton>Pool Overview</SidebarMenuButton>
+          <SidebarMenuButton
+            onClick={() =>
+              navigate({ to: "/pool/$poolId", params: { poolId: currentPoolId.displayId } })
+            }
+          >
+            Dashboard
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <SidebarMenuButton>Leaderboard</SidebarMenuButton>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <SidebarMenuButton>Members</SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
     </SidebarGroup>
