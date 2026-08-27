@@ -7,6 +7,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useNavigate } from "@tanstack/react-router";
+import { House, Podium } from "lucide-react";
 
 export function NavOverview() {
   const navigate = useNavigate();
@@ -29,14 +30,15 @@ export function NavOverview() {
               })
             }
           >
-            Dashboard
+            <House />
+            <span>Dashboard</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
         <SidebarMenuItem>
-          <SidebarMenuButton>Leaderboard</SidebarMenuButton>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
-          <SidebarMenuButton>Members</SidebarMenuButton>
+          <SidebarMenuButton>
+            <Podium />
+            <span>Leaderboard</span>
+          </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
     </SidebarGroup>

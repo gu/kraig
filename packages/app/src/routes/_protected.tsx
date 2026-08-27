@@ -1,7 +1,7 @@
 import { createFileRoute, redirect, Outlet } from "@tanstack/react-router";
 import { getSession } from "@/lib/auth.functions";
 import { CurrentUserProvider } from "#/components/current-user";
-import { SidebarInset, SidebarProvider } from "#/components/ui/sidebar";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "#/components/ui/sidebar";
 import { AppSidebar } from "#/components/app-sidebar";
 
 export const Route = createFileRoute("/_protected")({
@@ -26,6 +26,9 @@ function ProtectedRouteRoot() {
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
+          <header className="sticky top-0 flex shrink-0 items-center gap-2 border-b bg-background p-4">
+            <SidebarTrigger className="-ml-1" />
+          </header>
           <Outlet />
         </SidebarInset>
       </SidebarProvider>

@@ -17,6 +17,8 @@ import z from "zod";
 import db from "@db/client";
 import { toast } from "./ui/toast";
 import { useState } from "react";
+import { CirclePlus } from "lucide-react";
+import { SidebarGroup, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "./ui/sidebar";
 
 const createPool = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
@@ -67,54 +69,61 @@ export function CreatePoolDialog() {
   });
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger
-        render={
-          <Button variant="default" className="w-full" size={"lg"}>
-            Create a new Pool
-          </Button>
-        }
-      />
-      <DialogContent className="sm:max-w-md">
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            void form.handleSubmit();
-          }}
-        >
-          <DialogHeader>
-            <DialogTitle>Create a Pool</DialogTitle>
-          </DialogHeader>
-          <FieldGroup>
-            <Field className="my-6">
-              <FieldLabel htmlFor="name">Name</FieldLabel>
-              <form.Field name="name">
-                {(field) => (
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="Friends Pool"
-                    required
-                    value={field.state.value}
-                    onChange={(event) => field.handleChange(event.target.value)}
-                    onBlur={field.handleBlur}
-                  />
-                )}
-              </form.Field>
-            </Field>
-          </FieldGroup>
-          <DialogFooter>
-            <DialogClose
+    <SidebarGroup>
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger
               render={
-                <Button type="button" variant={"secondary"}>
-                  Close
-                </Button>
+                <SidebarMenuButton className="h-12">
+                  <CirclePlus />
+                  <span>Create a new Pool</span>
+                </SidebarMenuButton>
               }
             />
-            <Button type="submit">{submitting ? "Creating Pool..." : "Create Pool"}</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            <DialogContent className="sm:max-w-md">
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void form.handleSubmit();
+                }}
+              >
+                <DialogHeader>
+                  <DialogTitle>Create a Pool</DialogTitle>
+                </DialogHeader>
+                <FieldGroup>
+                  <Field className="my-6">
+                    <FieldLabel htmlFor="name">Name</FieldLabel>
+                    <form.Field name="name">
+                      {(field) => (
+                        <Input
+                          id="name"
+                          type="text"
+                          placeholder="Friends Pool"
+                          required
+                          value={field.state.value}
+                          onChange={(event) => field.handleChange(event.target.value)}
+                          onBlur={field.handleBlur}
+                        />
+                      )}
+                    </form.Field>
+                  </Field>
+                </FieldGroup>
+                <DialogFooter>
+                  <DialogClose
+                    render={
+                      <Button type="button" variant={"secondary"}>
+                        Close
+                      </Button>
+                    }
+                  />
+                  <Button type="submit">{submitting ? "Creating Pool..." : "Create Pool"}</Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    </SidebarGroup>
   );
 }

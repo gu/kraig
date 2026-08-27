@@ -8,6 +8,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useNavigate } from "@tanstack/react-router";
+import { FileSpreadsheet } from "lucide-react";
 
 export function NavSheets() {
   const navigate = useNavigate();
@@ -32,6 +33,7 @@ export function NavSheets() {
                 })
               }
             >
+              <FileSpreadsheet />
               {sheet.name}
             </SidebarMenuButton>
           </SidebarMenuItem>

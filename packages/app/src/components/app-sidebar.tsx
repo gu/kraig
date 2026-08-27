@@ -22,9 +22,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <Sidebar collapsible="icon" {...props}>
         <SidebarHeader>
           <PoolSwitcher />
-          <CreatePoolDialog />
         </SidebarHeader>
         <SidebarContent>
+          <CreatePoolDialog />
           <NavOverview />
           <NavSheets />
         </SidebarContent>
