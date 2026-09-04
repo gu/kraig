@@ -1,22 +1,14 @@
-import { SheetRules } from "#/components/sheet-rules";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "#/components/ui/card";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "#/components/ui/empty";
+import { Item, ItemContent, ItemGroup, ItemMedia, ItemTitle } from "#/components/ui/item";
 import { toast } from "#/components/ui/toast";
 import { useSheets } from "#/hooks/use-sheets";
 import { queryClient } from "#/lib/query-client";
 import { authMiddleware } from "#/middleware/auth";
 import db from "@db/client";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { PlusIcon } from "lucide-react";
+import { ChevronRightIcon, FileSpreadsheet } from "lucide-react";
 import z from "zod";
 
 export const Route = createFileRoute("/_protected/pool/$poolDisplayId")({
@@ -66,7 +58,88 @@ function PoolDashboard() {
 
   return (
     <>
-      <SheetRules />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="md:col-span-2 p-4">
+          <section className="py-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Rules</CardTitle>
+              </CardHeader>
+              <CardContent className="px-10">
+                <ul className="list-disc gap-1 flex flex-col text-xs">
+                  <li>Picks lock at the start of that teams game</li>
+                  <li>
+                    You can only select a team once. After they are chosen, you will not be allowed
+                    to select them for the rest of the year.
+                  </li>
+                  <li>You will only be able to make picks for the upcoming week</li>
+                  <li>You will have 3 lives. Every wrong pick will eliminate a life</li>
+                  <li>Once all 3 of your lives are gone, you will be eliminated</li>
+                </ul>
+              </CardContent>
+            </Card>
+          </section>
+        </div>
+
+        <div className="px-4">
+          <section className="py-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Your Sheets</CardTitle>
+              </CardHeader>
+              <CardContent className="px-2">
+                <ItemGroup>
+                  {(sheets ?? []).map((sheet) => {
+                    return (
+                      <Item
+                        key={sheet.id}
+                        variant="muted"
+                        render={
+                          <Link
+                            to="/sheet/$sheetDisplayId"
+                            params={{ sheetDisplayId: sheet.display_id }}
+                          />
+                        }
+                      >
+                        <ItemMedia variant="icon">
+                          <FileSpreadsheet />
+                        </ItemMedia>
+                        <ItemContent>
+                          <ItemTitle>{sheet.name}</ItemTitle>
+                        </ItemContent>
+                        <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" />
+                      </Item>
+                    );
+                  })}
+                </ItemGroup>
+              </CardContent>
+              <CardFooter>
+                <Button className="w-full" variant="default" size="sm" onClick={createHandler}>
+                  Create Sheet
+                </Button>
+              </CardFooter>
+            </Card>
+          </section>
+        </div>
+
+        <div className="px-4">
+          <section className="py-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Top 10</CardTitle>
+              </CardHeader>
+              <CardContent className="px-10"></CardContent>
+              <CardFooter>
+                <Button className="w-full" variant="default" size="sm" onClick={createHandler}>
+                  View Leaderboard
+                </Button>
+              </CardFooter>
+            </Card>
+          </section>
+        </div>
+      </div>
+
+      {/* <SheetRules />
       <section className="py-16">
         <div className="container mx-auto">
           <div className="border-t pt-14">
@@ -139,7 +212,7 @@ function PoolDashboard() {
             )}
           </div>
         </div>
-      </section>
+      </section> */}
     </>
   );
 }
