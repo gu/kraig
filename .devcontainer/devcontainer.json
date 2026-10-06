@@ -1,0 +1,8 @@
+{
+  "name": "Default Codespace",
+  "customizations": {
+    "vscode": {
+      "extensions": ["oxc.oxc-vscode", "usernamehw.errorlens", "wayou.vscode-todo-highlight"]
+    }
+  }
+}
