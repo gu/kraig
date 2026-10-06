@@ -4,5 +4,6 @@
     "vscode": {
       "extensions": ["oxc.oxc-vscode", "usernamehw.errorlens", "wayou.vscode-todo-highlight"]
     }
-  }
+  },
+  "postCreateCommand": "pnpm install"
 }
