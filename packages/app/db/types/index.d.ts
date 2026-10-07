@@ -19,7 +19,6 @@ export interface Account {
   createdAt: Generated<Timestamp>;
   id: string;
   idToken: string | null;
-  issuer: string;
   password: string | null;
   providerId: string;
   refreshToken: string | null;
@@ -63,6 +62,7 @@ export interface ExtTeam {
   abbreviation: string | null;
   conference: string;
   id: number;
+  logo_url: string | null;
   school: string;
 }
 

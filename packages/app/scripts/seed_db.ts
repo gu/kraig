@@ -111,6 +111,7 @@ const TeamSchema = z.object({
   school: z.string(),
   abbreviation: z.string().nullish(),
   conference: z.string(),
+  logos: z.array(z.string()).nullish(),
 });
 const rawTeamsResponse = await client
   .get("https://api.collegefootballdata.com/teams", {
@@ -148,6 +149,7 @@ await db.transaction().execute(async (trx) => {
         abbreviation: t.abbreviation,
         school: t.school,
         conference: t.conference,
+        logo_url: t.logos?.[0],
       })),
     )
     .onConflict((oc) =>
@@ -155,6 +157,7 @@ await db.transaction().execute(async (trx) => {
         abbreviation: eb.ref("excluded.abbreviation"),
         school: eb.ref("excluded.school"),
         conference: eb.ref("excluded.conference"),
+        logo_url: eb.ref("excluded.logo_url"),
       })),
     )
     .executeTakeFirstOrThrow();
