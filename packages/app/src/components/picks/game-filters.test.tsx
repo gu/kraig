@@ -25,6 +25,9 @@ const game = (id: number, homeId: number, awayId: number) => ({
   away_team: `Team ${awayId}`,
   home_spread: null,
   over_under: null,
+  completed: false,
+  home_points: null,
+  away_points: null,
 });
 
 const boardData: SheetBoard = {

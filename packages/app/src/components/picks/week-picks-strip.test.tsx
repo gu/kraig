@@ -19,6 +19,9 @@ const game = (id: number, week: number, startDate: string, homeId: number, awayI
   away_team: null,
   home_spread: null,
   over_under: null,
+  completed: false,
+  home_points: null,
+  away_points: null,
 });
 
 const boardData: SheetBoard = {

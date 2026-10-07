@@ -38,10 +38,13 @@ export interface ExtConference {
 export interface ExtGame {
   away_conference: string;
   away_id: number;
+  away_points: number | null;
   away_team: string | null;
+  completed: Generated<boolean>;
   conference_game: boolean;
   home_conference: string;
   home_id: number;
+  home_points: number | null;
   home_team: string | null;
   id: number;
   start_date: Timestamp;

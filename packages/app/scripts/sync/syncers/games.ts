@@ -13,6 +13,10 @@ const GameSchema = z.object({
   awayId: z.number(),
   awayTeam: z.string(),
   awayConference: z.string(),
+  completed: z.boolean(),
+  // Null until the game is final
+  homePoints: z.number().nullable(),
+  awayPoints: z.number().nullable(),
 });
 
 export const games: Syncer = {
@@ -55,6 +59,9 @@ export const games: Syncer = {
         home_id: g.homeId,
         home_team: g.homeTeam,
         home_conference: g.homeConference,
+        completed: g.completed,
+        home_points: g.homePoints,
+        away_points: g.awayPoints,
       })),
     });
   },

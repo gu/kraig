@@ -24,6 +24,9 @@ const game = (id: number, week: number, homeId: number, awayId: number) => ({
   away_team: null,
   home_spread: -3.5,
   over_under: null,
+  completed: false,
+  home_points: null,
+  away_points: null,
 });
 
 const board = (overrides: Partial<SheetBoard> = {}): SheetBoard => ({

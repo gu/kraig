@@ -46,6 +46,9 @@ const apiGame = (id: number, homeId: number, awayId: number) => ({
   awayId,
   awayTeam: `School ${awayId}`,
   awayConference: "ACC",
+  completed: false,
+  homePoints: null,
+  awayPoints: null,
 });
 
 const apiLine = (provider: string, spread: number) => ({
@@ -178,6 +181,28 @@ describe("syncers", () => {
       expect(await db.selectFrom("ext_game").select("id").orderBy("id").execute()).toEqual([
         { id: 100 },
         { id: 101 },
+      ]);
+    });
+
+    it("stores whether a game is final and its score", async () => {
+      await seedConferences("SEC");
+      await db.insertInto("ext_team").values(teamRow(1, "SEC")).execute();
+
+      const { ctx } = contextWith(() => [
+        { ...apiGame(100, 1, 2), completed: true, homePoints: 31, awayPoints: 17 },
+        apiGame(101, 1, 3),
+      ]);
+      await games.run(ctx);
+
+      expect(
+        await db
+          .selectFrom("ext_game")
+          .select(["id", "completed", "home_points", "away_points"])
+          .orderBy("id")
+          .execute(),
+      ).toEqual([
+        { id: 100, completed: true, home_points: 31, away_points: 17 },
+        { id: 101, completed: false, home_points: null, away_points: null },
       ]);
     });
   });

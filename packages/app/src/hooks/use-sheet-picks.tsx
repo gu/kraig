@@ -29,7 +29,18 @@ const getSheetBoard = createServerFn({ method: "GET" })
     const [games, teams, lines, rankings, picks] = await Promise.all([
       db
         .selectFrom("ext_game")
-        .select(["id", "week", "start_date", "home_id", "home_team", "away_id", "away_team"])
+        .select([
+          "id",
+          "week",
+          "start_date",
+          "home_id",
+          "home_team",
+          "away_id",
+          "away_team",
+          "completed",
+          "home_points",
+          "away_points",
+        ])
         .orderBy("start_date")
         .orderBy("id")
         .execute(),
