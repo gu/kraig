@@ -65,7 +65,7 @@ function PickSlot({
     >
       <DropdownMenuTrigger
         aria-label={`${rankedName(pick.team)}, ${detail}`}
-        className="flex min-h-19 w-full min-w-0 flex-col items-center gap-1.5 rounded-lg px-0.5 py-1 outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 aria-expanded:bg-muted"
+        className="flex min-h-24 w-full min-w-0 flex-col items-center gap-2 rounded-lg px-1.5 pt-3.5 pb-2 outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 aria-expanded:bg-muted"
       >
         <span
           className={cn(
@@ -148,7 +148,7 @@ export function WeekPicksStrip({
         </h2>
         <span className="text-[13px] text-muted-foreground">{summary(week)}</span>
       </div>
-      <ol className="grid grid-cols-5 gap-1.5">
+      <ol className="grid grid-cols-5 gap-2">
         {week.picks.map((pick) => (
           <li key={pick.game.game.id} className="min-w-0">
             <PickSlot
@@ -163,7 +163,7 @@ export function WeekPicksStrip({
         {Array.from({ length: emptySlots }, (_, i) => (
           <li
             key={`empty-${i}`}
-            className="flex min-h-19 min-w-0 flex-col items-center gap-1.5 py-1 text-muted-foreground"
+            className="flex min-h-24 min-w-0 flex-col items-center gap-2 px-1.5 pt-3.5 pb-2 text-muted-foreground"
           >
             <span className="flex size-12 items-center justify-center rounded-full border-[1.5px] border-dashed text-[13px] font-semibold">
               {week.picks.length + i + 1}
