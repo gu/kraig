@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { SheetBoard } from "#/hooks/use-sheet-picks";
 import { buildBoard } from "./board";
 import { GameCard } from "./game-card";
+import { SheetStats, sheetStats } from "./sheet-stats";
 import { WeekPicksCard } from "./week-picks-card";
 import { WeekPicksStrip } from "./week-picks-strip";
 
@@ -114,5 +115,22 @@ describe("pick results", () => {
     const pending = card(2);
     expect(pending).not.toContain("Final");
     expect(pending).not.toContain(">7</span>");
+  });
+
+  it("totals the season record across weeks", () => {
+    expect(sheetStats(weeks)).toEqual({ wins: 1, losses: 1, pending: 2, winRate: 0.5 });
+
+    const html = renderToStaticMarkup(<SheetStats weeks={weeks} />);
+    expect(html).toContain("Won</dt><dd");
+    expect(html).toContain("text-success");
+    expect(html).toContain("text-destructive");
+    expect(html).toContain(">50%</dd>");
+  });
+
+  it("shows no win rate before any pick is decided", () => {
+    expect(sheetStats([weeks[1]])).toEqual({ wins: 0, losses: 0, pending: 1, winRate: null });
+    const html = renderToStaticMarkup(<SheetStats weeks={[weeks[1]]} />);
+    expect(html).toContain(">–</dd>");
+    expect(html).not.toContain("text-success");
   });
 });

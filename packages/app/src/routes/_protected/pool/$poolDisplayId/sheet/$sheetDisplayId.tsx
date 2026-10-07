@@ -8,6 +8,7 @@ import {
   type GameFilter,
 } from "#/components/picks/game-filters";
 import { GameSortMenu, sortGames, type GameSort } from "#/components/picks/game-sort";
+import { SheetStats } from "#/components/picks/sheet-stats";
 import { UsedTeamsCard } from "#/components/picks/used-teams-card";
 import { WeekPicksCard } from "#/components/picks/week-picks-card";
 import { WeekPicksStrip } from "#/components/picks/week-picks-strip";
@@ -27,8 +28,6 @@ import { toast } from "#/components/ui/toast";
 import { useNow } from "#/hooks/use-now";
 import { useRemovePick, useSavePick, useSheetBoard } from "#/hooks/use-sheet-picks";
 import { useSheets } from "#/hooks/use-sheets";
-import { PICKS_PER_WEEK } from "#/lib/picks";
-import { cn } from "@/lib/utils";
 import { createFileRoute } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { LockIcon, SearchIcon } from "lucide-react";
@@ -111,8 +110,6 @@ function Sheet() {
     return [...groups.entries()].map(([label, games]) => ({ label, games }));
   }, [shownGames, sort]);
 
-  const pickCount = selectedWeek?.picks.length ?? 0;
-
   // Scroll to a game once it's rendered, after clearing anything that was hiding it
   const [scrollToGameId, setScrollToGameId] = useState<number | null>(null);
   useEffect(() => {
@@ -135,7 +132,7 @@ function Sheet() {
   return (
     <div className="@container/sheet flex flex-col gap-4 p-4">
       <Card>
-        <CardHeader className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+        <CardHeader className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
           <div className="flex min-w-0 flex-col gap-1">
             <div className="flex min-w-0 items-center gap-1">
               <CardTitle className="truncate text-lg">{sheet?.name}</CardTitle>
@@ -147,30 +144,7 @@ function Sheet() {
               {selectedWeek ? `Week ${selectedWeek.week} · ${selectedWeek.dates}` : " "}
             </CardDescription>
           </div>
-          <div className="flex flex-wrap items-center gap-4">
-            {selectedWeek && (
-              // On narrow screens the picks strip shows progress instead
-              <div className="hidden flex-col gap-1.5 @4xl/sheet:flex">
-                <div className="text-sm text-muted-foreground">
-                  <span className="font-semibold text-foreground">
-                    {pickCount} of {PICKS_PER_WEEK}
-                  </span>{" "}
-                  picks made
-                </div>
-                <div className="flex gap-1" aria-hidden="true">
-                  {Array.from({ length: PICKS_PER_WEEK }, (_, i) => (
-                    <span
-                      key={i}
-                      className={cn(
-                        "h-1.5 w-7 rounded-full",
-                        i < pickCount ? "bg-primary" : "bg-muted",
-                      )}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          {weeks.length > 0 && <SheetStats weeks={weeks} />}
         </CardHeader>
       </Card>
 
