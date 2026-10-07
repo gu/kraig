@@ -83,8 +83,8 @@ describe("pick results", () => {
       <WeekPicksStrip week={weeks[0]} busy={false} onRemove={() => {}} onShowGame={() => {}} />,
     );
 
-    expect(html).toContain('aria-label="Texas, vs Michigan · W 31–17"');
-    expect(html).toContain('aria-label="Alabama, at Georgia · L 10–24"');
+    expect(html).toContain('aria-label="Texas, vs Michigan · W 31–17 · +1"');
+    expect(html).toContain('aria-label="Alabama, at Georgia · L 10–24 · +0"');
     expect(html.match(/ring-success/g)).toHaveLength(1);
     expect(html.match(/ring-destructive/g)).toHaveLength(1);
     expect(html.match(/ring-primary\/40/g)).toHaveLength(1);
@@ -126,7 +126,7 @@ describe("pick results", () => {
   });
 
   it("totals the season record across weeks", () => {
-    expect(sheetStats(weeks)).toEqual({ wins: 1, losses: 1, pending: 2, winRate: 0.5 });
+    expect(sheetStats(weeks)).toEqual({ points: 1, wins: 1, losses: 1, pending: 2, winRate: 0.5 });
 
     const html = renderToStaticMarkup(<SheetStats weeks={weeks} />);
     expect(html).toContain("Won</dt><dd");
@@ -136,7 +136,13 @@ describe("pick results", () => {
   });
 
   it("shows no win rate before any pick is decided", () => {
-    expect(sheetStats([weeks[1]])).toEqual({ wins: 0, losses: 0, pending: 1, winRate: null });
+    expect(sheetStats([weeks[1]])).toEqual({
+      points: 0,
+      wins: 0,
+      losses: 0,
+      pending: 1,
+      winRate: null,
+    });
     const html = renderToStaticMarkup(<SheetStats weeks={[weeks[1]]} />);
     expect(html).toContain(">–</dd>");
     expect(html).not.toContain("text-success");

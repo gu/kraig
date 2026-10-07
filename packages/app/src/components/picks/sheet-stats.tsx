@@ -8,7 +8,8 @@ export function sheetStats(weeks: WeekView[]) {
   const losses = picks.filter((p) => p.result === "loss").length;
   const pending = picks.filter((p) => !isFinal(p.game.game)).length;
   const decided = wins + losses;
-  return { wins, losses, pending, winRate: decided === 0 ? null : wins / decided };
+  const points = weeks.reduce((sum, w) => sum + w.points, 0);
+  return { points, wins, losses, pending, winRate: decided === 0 ? null : wins / decided };
 }
 
 function Stat({ label, value, className }: { label: string; value: string; className?: string }) {
@@ -21,10 +22,11 @@ function Stat({ label, value, className }: { label: string; value: string; class
 }
 
 export function SheetStats({ weeks }: { weeks: WeekView[] }) {
-  const { wins, losses, pending, winRate } = sheetStats(weeks);
+  const { points, wins, losses, pending, winRate } = sheetStats(weeks);
 
   return (
     <dl className="flex flex-wrap gap-x-6 gap-y-2" aria-label="Season record">
+      <Stat label="Points" value={`${points}`} />
       <Stat label="Won" value={`${wins}`} className={wins > 0 ? "text-success" : undefined} />
       <Stat
         label="Lost"

@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PICK_TYPE_LABELS, type PoolSettings } from "#/lib/pool-settings";
+import { describeScoring } from "#/lib/scoring";
 
 function plural(count: number, noun: string) {
   return `${count} ${noun}${count === 1 ? "" : "s"}`;
@@ -53,6 +54,7 @@ export function RulesCard({ settings }: { settings: PoolSettings }) {
             {settings.conferences === null ? "any conference" : conferences.join(", ")}.
           </li>
           <li>{PICK_TYPE_LABELS[settings.pickType].rule}</li>
+          <li>Each winning pick earns {describeScoring()}. Losses and pushes earn nothing.</li>
           <li>Picks lock at the start of that team's game.</li>
           <li>
             You can only select a team once. After they're chosen, you can't pick them again this

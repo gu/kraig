@@ -60,7 +60,9 @@ export function WeekTabs({
               >
                 {week.state === "upcoming"
                   ? `Opens after week ${week.week - 1}`
-                  : `${week.picks.length}/${week.picksPerWeek} picked`}
+                  : week.state === "complete" && week.picks.some((p) => p.points !== null)
+                    ? `${week.points} ${week.points === 1 ? "pt" : "pts"}`
+                    : `${week.picks.length}/${week.picksPerWeek} picked`}
               </span>
             </button>
           );

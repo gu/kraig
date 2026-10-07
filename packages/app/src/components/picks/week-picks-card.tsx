@@ -1,5 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Item,
   ItemActions,
@@ -12,17 +19,19 @@ import {
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { LockIcon, XIcon } from "lucide-react";
-import { rankedName, type PickView, type WeekView } from "./board";
+import { isFinal, rankedName, type PickView, type WeekView } from "./board";
 import { TeamLogo } from "./team-logo";
 import { TeamName } from "./team-name";
 
-/** Final score from the picked team's side, e.g. "W 31–17" */
+/** Final score from the picked team's side with the points earned, e.g. "W 31–17 · +2" */
 function finalScore(pick: PickView) {
   const { home_points, away_points } = pick.game.game;
-  if (pick.result === null || home_points === null || away_points === null) return null;
+  if (!isFinal(pick.game.game) || home_points === null || away_points === null) return null;
   const [ours, theirs] =
     pick.team === pick.game.home ? [home_points, away_points] : [away_points, home_points];
-  return `${pick.result === "win" ? "W" : "L"} ${ours}–${theirs}`;
+  // A null result on a final game is a push (or a tie)
+  const outcome = pick.result === "win" ? "W" : pick.result === "loss" ? "L" : "P";
+  return `${outcome} ${ours}–${theirs} · +${pick.points ?? 0}`;
 }
 
 export function pickDetail(pick: PickView) {
@@ -67,6 +76,9 @@ export function WeekPicksCard({
     <Card>
       <CardHeader>
         <CardTitle>Week {week.week} picks</CardTitle>
+        <CardDescription>
+          {week.winValue} {week.winValue === 1 ? "pt" : "pts"} per win
+        </CardDescription>
         <CardAction className="text-sm text-muted-foreground">
           {week.picks.length} / {week.picksPerWeek}
         </CardAction>

@@ -1,6 +1,7 @@
 import type { BoardGame, BoardTeam, SheetBoard } from "#/hooks/use-sheet-picks";
 import { getOpenWeek, getWeekState, hasStarted, type WeekState } from "#/lib/picks";
 import { isConferenceInPool, type PickType, type PoolSettings } from "#/lib/pool-settings";
+import { pickPoints, winValue } from "#/lib/scoring";
 import { format, isSameMonth } from "date-fns";
 
 export type TeamPickState =
@@ -44,6 +45,8 @@ export interface PickView {
   team: TeamView;
   /** Null until the game is final */
   result: PickResult | null;
+  /** Points earned, null until the game is final */
+  points: number | null;
 }
 
 export interface WeekView {
@@ -53,6 +56,10 @@ export interface WeekView {
   games: GameView[];
   picks: PickView[];
   picksPerWeek: number;
+  /** Points a winning pick earns this week */
+  winValue: number;
+  /** Points earned by this week's final picks */
+  points: number;
 }
 
 /** Team name prefixed with its AP rank, e.g. "#4 Texas" */
@@ -190,14 +197,16 @@ export function buildBoard(board: SheetBoard, now: Date) {
         };
       });
 
-      const picks = gameViews.flatMap((g) => {
+      const picks: PickView[] = gameViews.flatMap((g) => {
         const pickedTeamId = pickByGame.get(g.game.id);
         if (pickedTeamId === undefined) return [];
+        const result = pickedTeamId === g.home.id ? g.home.result : g.away.result;
         return [
           {
             game: g,
             team: pickedTeamId === g.home.id ? g.home : g.away,
-            result: pickedTeamId === g.home.id ? g.home.result : g.away.result,
+            result,
+            points: pickPoints(result, week, isFinal(g.game)),
           },
         ];
       });
@@ -209,6 +218,8 @@ export function buildBoard(board: SheetBoard, now: Date) {
         games: gameViews,
         picks,
         picksPerWeek: settings.picksPerWeek,
+        winValue: winValue(week),
+        points: picks.reduce((sum, p) => sum + (p.points ?? 0), 0),
       };
     });
 
