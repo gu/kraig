@@ -12,7 +12,9 @@
     "preview": "vite preview",
     "generate-db-types": "kysely-codegen --out-file db/types/index.d.ts",
     "migrate": "auth migrate --config src/lib/auth.ts --yes && kysely migrate:latest",
-    "seed-external-data": "node scripts/seed_db.ts"
+    "sync-external-data": "node scripts/sync/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
@@ -45,6 +47,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@tanstack/devtools-vite": "latest",
     "@tanstack/router-cli": "^1.132.0",
     "@types/node": "^22.10.2",
@@ -54,6 +57,7 @@
     "@vitejs/plugin-react": "^6.0.1",
     "auth": "1.7.7",
     "typescript": "^6.0.2",
-    "vite": "^8.0.0"
+    "vite": "^8.0.0",
+    "vitest": "^5.0.3"
   }
 }

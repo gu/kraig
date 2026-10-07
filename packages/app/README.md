@@ -9,6 +9,55 @@ pnpm install
 pnpm dev
 ```
 
+# External Data Sync
+
+College football data (conferences, teams, games and betting lines) comes from the [CollegeFootballData API](https://collegefootballdata.com) and is stored in the `ext_*` tables. The sync CLI in `scripts/sync/` pulls that data into the database.
+
+It requires `DATABASE_URL` and `CFBD_API_KEY` in `.env.local` or `.env`, and a migrated database (`pnpm migrate`).
+
+```bash
+pnpm sync-external-data                          # sync every table
+pnpm sync-external-data -- games lines           # sync only some tables
+pnpm sync-external-data -- --dry-run             # preview changes without committing them
+pnpm sync-external-data -- teams --year 2025     # sync a different season
+```
+
+| Option              | Default      | Description                                      |
+| ------------------- | ------------ | ------------------------------------------------ |
+| `--year <year>`     | current year | Season to sync                                   |
+| `--dry-run`         | off          | Fetch and diff, then roll back every change      |
+| `--concurrency <n>` | `2`          | Max CFBD requests in flight at once              |
+| `--interval <ms>`   | `250`        | Minimum delay between the start of CFBD requests |
+| `-h`, `--help`      |              | Show usage                                       |
+
+## How it works
+
+- **Tables:** `conferences` → `teams` → `games` → `lines`. Selected tables always run in this order.
+- **Scope:** each table is scoped by the tables before it, read from the database:
+  - teams in the synced conferences;
+  - games involving the synced teams;
+  - lines for the synced games.
+
+  This means a table can be synced on its own once the tables it depends on have been synced. If one of them is empty, the sync fails with an error saying which table to sync first.
+
+- **Upserts:** rows are inserted or updated by primary key (`id`, or `(game_id, provider)` for lines), in one transaction per table.
+- **Stale records are reported, never deleted.** Rows that are in the database but no longer returned by CFBD are listed in a report at the end of the run. Clean them up manually if needed. Deleting a game or team would cascade to users' `sheet_pick` rows. The `ext_*` tables don't store the season, so syncing a different `--year` reports the other season's rows as stale.
+- **Rate limiting:** CFBD requests go through a throttle, controlled by `--concurrency` and `--interval`. Failed requests (429 and 5xx) are retried up to 5 times with jittered backoff, honoring the `Retry-After` header.
+
+## Adding a table
+
+1. Add a syncer in `scripts/sync/syncers/` that fetches with `ctx.cfbd.get` / `ctx.cfbd.getMany` and returns `syncTable(ctx, { table, keys, rows })`.
+2. Register it in the `Syncers` list in `scripts/sync/index.ts`, in dependency order.
+
+# Testing
+
+```bash
+pnpm test         # run once
+pnpm test:watch   # re-run on changes
+```
+
+Tests use [Vitest](https://vitest.dev) and live next to the code as `*.test.ts`. Vitest is configured in `vitest.config.ts`, separately from `vite.config.ts`, so tests don't load the app's TanStack Start and Tailwind plugins. Database tests run against an in-memory Postgres ([PGlite](https://pglite.dev)) with the app's migrations applied, so no database server is needed. CFBD calls are replaced with a fake client, so no API key or network is needed either.
+
 # Building For Production
 
 To build this application for production:
