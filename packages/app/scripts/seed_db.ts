@@ -239,6 +239,71 @@ await db.transaction().execute(async (trx) => {
 });
 // #endregion
 
+// #region Get external betting line data
+const GameLineSchema = z.object({
+  provider: z.string(),
+  spread: z.number().nullable(),
+  formattedSpread: z.string(),
+  spreadOpen: z.number().nullable(),
+  overUnder: z.number().nullable(),
+  overUnderOpen: z.number().nullable(),
+  homeMoneyline: z.number().nullable(),
+  awayMoneyline: z.number().nullable(),
+});
+const BettingGameSchema = z.object({
+  id: z.number(),
+  lines: z.array(GameLineSchema),
+});
+const allBettingGamesRaw = await Promise.all(
+  conferenceData.map(async (c) => {
+    const rawLinesResponse = await client
+      .get("https://api.collegefootballdata.com/lines", {
+        searchParams: {
+          year: getYear(new Date()),
+          conference: c.abbreviation!,
+        },
+      })
+      .json();
+    return z.array(BettingGameSchema).parse(rawLinesResponse);
+  }),
+);
+const bettingGameData = Array.from(
+  new Map(allBettingGamesRaw.flat().map((g) => [g.id, g])).values(),
+).filter((g) => gameIds.includes(g.id));
+const lineData = bettingGameData.flatMap((g) =>
+  g.lines.map((l) => ({
+    game_id: g.id,
+    provider: l.provider,
+    spread: l.spread,
+    formatted_spread: l.formattedSpread,
+    spread_open: l.spreadOpen,
+    over_under: l.overUnder,
+    over_under_open: l.overUnderOpen,
+    home_moneyline: l.homeMoneyline,
+    away_moneyline: l.awayMoneyline,
+  })),
+);
+console.log(`> Got ${lineData.length} betting line entries to insert`);
+// #endregion
+
+// #region Update betting line data in db
+await db.transaction().execute(async (trx) => {
+  // Replace all lines so that lines a provider no longer offers are removed
+  const deleteLinesResult = await trx.deleteFrom("ext_line").executeTakeFirstOrThrow();
+  console.log(`> Removed ${deleteLinesResult.numDeletedRows} betting lines`);
+
+  if (lineData.length > 0) {
+    const insertLinesResult = await trx
+      .insertInto("ext_line")
+      .values(lineData)
+      .executeTakeFirstOrThrow();
+    console.log(
+      `> Inserted ${insertLinesResult.numInsertedOrUpdatedRows} betting lines into database`,
+    );
+  }
+});
+// #endregion
+
 // #region Cleanup
 await db.destroy();
 console.log();

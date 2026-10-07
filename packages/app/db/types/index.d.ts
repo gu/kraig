@@ -47,6 +47,18 @@ export interface ExtGame {
   week: number;
 }
 
+export interface ExtLine {
+  away_moneyline: number | null;
+  formatted_spread: string;
+  game_id: number;
+  home_moneyline: number | null;
+  over_under: number | null;
+  over_under_open: number | null;
+  provider: string;
+  spread: number | null;
+  spread_open: number | null;
+}
+
 export interface ExtTeam {
   abbreviation: string | null;
   conference: string;
@@ -107,6 +119,7 @@ export interface DB {
   account: Account;
   ext_conference: ExtConference;
   ext_game: ExtGame;
+  ext_line: ExtLine;
   ext_team: ExtTeam;
   pool: Pool;
   session: Session;
