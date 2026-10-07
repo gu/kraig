@@ -16,7 +16,7 @@ import { rankedName, type PickView, type WeekView } from "./board";
 import { TeamLogo } from "./team-logo";
 import { TeamName } from "./team-name";
 
-function pickDetail(pick: PickView) {
+export function pickDetail(pick: PickView) {
   const opponent = pick.team === pick.game.home ? pick.game.away : pick.game.home;
   const prefix = pick.team === pick.game.home ? "vs" : "at";
   const when = pick.game.started

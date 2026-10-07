@@ -87,6 +87,11 @@ function TeamPickButton({
   );
 }
 
+/** DOM id of a game's card, for scrolling to it */
+export function gameCardId(gameId: number) {
+  return `game-${gameId}`;
+}
+
 export function GameCard({
   game,
   busy,
@@ -102,7 +107,10 @@ export function GameCard({
   const overUnder = game.game.over_under;
 
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-3">
+    <div
+      id={gameCardId(game.game.id)}
+      className="flex scroll-mt-4 flex-wrap items-center gap-3 rounded-lg border bg-card p-3"
+    >
       <div className="flex w-full shrink-0 items-center gap-2 sm:w-28 sm:flex-col sm:items-start sm:gap-1">
         {showDate && (
           <span className="text-xs font-medium text-muted-foreground">

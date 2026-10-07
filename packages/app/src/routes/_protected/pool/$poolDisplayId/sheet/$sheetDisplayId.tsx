@@ -1,6 +1,6 @@
 import { EditSheetNameDialog } from "#/components/edit-sheet-name-dialog";
 import { buildBoard, type GameView, type PickView, type TeamView } from "#/components/picks/board";
-import { GameCard } from "#/components/picks/game-card";
+import { GameCard, gameCardId } from "#/components/picks/game-card";
 import {
   ActiveGameFilters,
   GameFiltersMenu,
@@ -10,6 +10,7 @@ import {
 import { GameSortMenu, sortGames, type GameSort } from "#/components/picks/game-sort";
 import { UsedTeamsCard } from "#/components/picks/used-teams-card";
 import { WeekPicksCard } from "#/components/picks/week-picks-card";
+import { WeekPicksStrip } from "#/components/picks/week-picks-strip";
 import { WeekTabs } from "#/components/picks/week-tabs";
 import { Card, CardDescription, CardHeader, CardTitle } from "#/components/ui/card";
 import { Button } from "#/components/ui/button";
@@ -31,7 +32,7 @@ import { cn } from "@/lib/utils";
 import { createFileRoute } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { LockIcon, SearchIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import z from "zod";
 
 export const Route = createFileRoute("/_protected/pool/$poolDisplayId/sheet/$sheetDisplayId")({
@@ -112,8 +113,27 @@ function Sheet() {
 
   const pickCount = selectedWeek?.picks.length ?? 0;
 
+  // Scroll to a game once it's rendered, after clearing anything that was hiding it
+  const [scrollToGameId, setScrollToGameId] = useState<number | null>(null);
+  useEffect(() => {
+    if (scrollToGameId === null) return;
+    const card = document.getElementById(gameCardId(scrollToGameId));
+    if (!card) return;
+    card.scrollIntoView({ block: "center", behavior: "smooth" });
+    card.querySelector<HTMLButtonElement>("button:not(:disabled)")?.focus({ preventScroll: true });
+    setScrollToGameId(null);
+  }, [scrollToGameId, sections]);
+
+  const onShowGame = (pick: PickView) => {
+    if (!shownGames.includes(pick.game)) {
+      setQuery("");
+      setFilters([]);
+    }
+    setScrollToGameId(pick.game.game.id);
+  };
+
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="@container/sheet flex flex-col gap-4 p-4">
       <Card>
         <CardHeader className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
           <div className="flex min-w-0 flex-col gap-1">
@@ -129,7 +149,8 @@ function Sheet() {
           </div>
           <div className="flex flex-wrap items-center gap-4">
             {selectedWeek && (
-              <div className="flex flex-col gap-1.5">
+              // On narrow screens the picks strip shows progress instead
+              <div className="hidden flex-col gap-1.5 @4xl/sheet:flex">
                 <div className="text-sm text-muted-foreground">
                   <span className="font-semibold text-foreground">
                     {pickCount} of {PICKS_PER_WEEK}
@@ -175,8 +196,16 @@ function Sheet() {
         <>
           <WeekTabs weeks={weeks} selectedWeek={selectedWeek.week} onSelect={selectWeek} />
 
-          <div className="flex flex-wrap items-start gap-4">
-            <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-4">
+          <WeekPicksStrip
+            week={selectedWeek}
+            busy={busy}
+            onRemove={onRemove}
+            onShowGame={onShowGame}
+            className="@4xl/sheet:hidden"
+          />
+
+          <div className="flex flex-col gap-4 @4xl/sheet:flex-row @4xl/sheet:items-start">
+            <div className="flex min-w-0 flex-1 flex-col gap-4">
               {selectedWeek.state !== "open" && (
                 <div className="flex items-center gap-2.5 rounded-lg bg-muted px-3 py-2.5 text-sm text-muted-foreground">
                   <LockIcon className="size-4 shrink-0" aria-hidden="true" />
@@ -252,8 +281,10 @@ function Sheet() {
               )}
             </div>
 
-            <aside className="flex min-w-0 flex-[1_1_300px] flex-col gap-4">
-              <WeekPicksCard week={selectedWeek} busy={busy} onRemove={onRemove} />
+            <aside className="flex min-w-0 flex-col gap-4 @4xl/sheet:w-80 @4xl/sheet:shrink-0">
+              <div className="hidden @4xl/sheet:block">
+                <WeekPicksCard week={selectedWeek} busy={busy} onRemove={onRemove} />
+              </div>
               <UsedTeamsCard weeks={weeks} selectedWeek={selectedWeek.week} />
             </aside>
           </div>
