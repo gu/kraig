@@ -13,6 +13,7 @@
     "generate-db-types": "kysely-codegen --out-file db/types/index.d.ts",
     "migrate": "auth migrate --config src/lib/auth.ts --yes && kysely migrate:latest",
     "sync-external-data": "node scripts/sync/index.ts",
+    "random-picks": "node scripts/random-picks/index.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
