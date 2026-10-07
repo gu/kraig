@@ -2,7 +2,12 @@
   "name": "Default Codespace",
   "customizations": {
     "vscode": {
-      "extensions": ["oxc.oxc-vscode", "usernamehw.errorlens", "wayou.vscode-todo-highlight"]
+      "extensions": [
+        "oxc.oxc-vscode",
+        "usernamehw.errorlens",
+        "wayou.vscode-todo-highlight",
+        "ckolkman.vscode-postgres"
+      ]
     }
   },
   "postCreateCommand": "pnpm install"
