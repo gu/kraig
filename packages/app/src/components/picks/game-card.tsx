@@ -91,16 +91,24 @@ export function GameCard({
   game,
   busy,
   onPick,
+  showDate = false,
 }: {
   game: GameView;
   busy: boolean;
   onPick: (game: GameView, team: TeamView) => void;
+  /** Show the kickoff day, for lists that aren't grouped by day */
+  showDate?: boolean;
 }) {
   const overUnder = game.game.over_under;
 
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-3">
       <div className="flex w-full shrink-0 items-center gap-2 sm:w-28 sm:flex-col sm:items-start sm:gap-1">
+        {showDate && (
+          <span className="text-xs font-medium text-muted-foreground">
+            {format(new Date(game.game.start_date), "EEE, MMM d")}
+          </span>
+        )}
         {game.started ? (
           <Badge variant="secondary">Started</Badge>
         ) : (

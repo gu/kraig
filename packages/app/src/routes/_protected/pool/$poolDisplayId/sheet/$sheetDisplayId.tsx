@@ -7,6 +7,7 @@ import {
   matchesGameFilters,
   type GameFilter,
 } from "#/components/picks/game-filters";
+import { GameSortMenu, sortGames, type GameSort } from "#/components/picks/game-sort";
 import { UsedTeamsCard } from "#/components/picks/used-teams-card";
 import { WeekPicksCard } from "#/components/picks/week-picks-card";
 import { WeekTabs } from "#/components/picks/week-tabs";
@@ -56,6 +57,7 @@ function Sheet() {
 
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState<GameFilter[]>([]);
+  const [sort, setSort] = useState<GameSort>("time");
 
   const weeks = board?.weeks ?? [];
   const selectedWeek =
@@ -84,27 +86,31 @@ function Sheet() {
     removePick.mutate(pick.game.game.id, { onError });
   };
 
-  const days = useMemo(() => {
+  const shownGames = useMemo(() => {
     if (!selectedWeek) return [];
     const search = query.trim().toLowerCase();
+    const matching = selectedWeek.games.filter(
+      (game) =>
+        (!search ||
+          game.away.name.toLowerCase().includes(search) ||
+          game.home.name.toLowerCase().includes(search)) &&
+        matchesGameFilters(game, filters),
+    );
+    return sortGames(matching, sort);
+  }, [selectedWeek, query, filters, sort]);
+
+  // Kickoff order is grouped by day; other sorts are a single list
+  const sections = useMemo(() => {
+    if (sort !== "time") return shownGames.length > 0 ? [{ label: null, games: shownGames }] : [];
     const groups = new Map<string, GameView[]>();
-    for (const game of selectedWeek.games) {
-      if (
-        search &&
-        !game.away.name.toLowerCase().includes(search) &&
-        !game.home.name.toLowerCase().includes(search)
-      ) {
-        continue;
-      }
-      if (!matchesGameFilters(game, filters)) continue;
+    for (const game of shownGames) {
       const label = format(new Date(game.game.start_date), "EEEE, MMM d");
       groups.set(label, [...(groups.get(label) ?? []), game]);
     }
-    return [...groups.entries()];
-  }, [selectedWeek, query, filters]);
+    return [...groups.entries()].map(([label, games]) => ({ label, games }));
+  }, [shownGames, sort]);
 
   const pickCount = selectedWeek?.picks.length ?? 0;
-  const shownGameCount = days.reduce((count, [, games]) => count + games.length, 0);
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -198,28 +204,39 @@ function Sheet() {
                     className="pl-9"
                   />
                 </div>
-                <GameFiltersMenu filters={filters} onChange={setFilters} />
+                <div className="flex items-center gap-2">
+                  <GameSortMenu sort={sort} onChange={setSort} />
+                  <GameFiltersMenu filters={filters} onChange={setFilters} />
+                </div>
               </div>
 
               <ActiveGameFilters
                 filters={filters}
                 onChange={setFilters}
-                shown={shownGameCount}
+                shown={shownGames.length}
                 total={selectedWeek.games.length}
               />
 
-              {days.map(([label, games]) => (
-                <section key={label} className="flex flex-col gap-2">
-                  <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                    {label}
-                  </h2>
+              {sections.map(({ label, games }) => (
+                <section key={label ?? "all"} className="flex flex-col gap-2">
+                  {label && (
+                    <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                      {label}
+                    </h2>
+                  )}
                   {games.map((game) => (
-                    <GameCard key={game.game.id} game={game} busy={busy} onPick={onPick} />
+                    <GameCard
+                      key={game.game.id}
+                      game={game}
+                      busy={busy}
+                      onPick={onPick}
+                      showDate={label === null}
+                    />
                   ))}
                 </section>
               ))}
 
-              {days.length === 0 && (
+              {sections.length === 0 && (
                 <Empty className="border border-dashed">
                   <EmptyHeader>
                     <EmptyDescription>No games match your filters this week.</EmptyDescription>
