@@ -12,8 +12,9 @@ import {
 import { PICKS_PER_WEEK } from "#/lib/picks";
 import { format } from "date-fns";
 import { LockIcon, XIcon } from "lucide-react";
-import type { PickView, WeekView } from "./board";
+import { rankedName, type PickView, type WeekView } from "./board";
 import { TeamLogo } from "./team-logo";
+import { TeamName } from "./team-name";
 
 function pickDetail(pick: PickView) {
   const opponent = pick.team === pick.game.home ? pick.game.away : pick.game.home;
@@ -21,7 +22,7 @@ function pickDetail(pick: PickView) {
   const when = pick.game.started
     ? "Started"
     : format(new Date(pick.game.game.start_date), "EEE h:mm a");
-  return `${prefix} ${opponent.name} · ${when}`;
+  return `${prefix} ${rankedName(opponent)} · ${when}`;
 }
 
 export function WeekPicksCard({
@@ -66,7 +67,11 @@ export function WeekPicksCard({
                   <TeamLogo team={pick.team.team} name={pick.team.name} className="size-8" />
                 </ItemMedia>
                 <ItemContent className="min-w-0">
-                  <ItemTitle className="truncate">{pick.team.name}</ItemTitle>
+                  <ItemTitle className="max-w-full">
+                    <span className="min-w-0 truncate">
+                      <TeamName team={pick.team} />
+                    </span>
+                  </ItemTitle>
                   <ItemDescription className="truncate">{pickDetail(pick)}</ItemDescription>
                 </ItemContent>
                 <ItemActions>

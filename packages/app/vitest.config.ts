@@ -4,7 +4,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   resolve: { tsconfigPaths: true },
   test: {
-    include: ["scripts/**/*.test.ts"],
+    include: ["scripts/**/*.test.ts", "src/**/*.test.{ts,tsx}"],
     environment: "node",
     restoreMocks: true,
   },

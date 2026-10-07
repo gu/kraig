@@ -3,8 +3,9 @@ import { cn } from "@/lib/utils";
 import { PICKS_PER_WEEK } from "#/lib/picks";
 import { ArrowLeftRightIcon, CheckIcon, LockIcon } from "lucide-react";
 import { format } from "date-fns";
-import { formatSpread, type GameView, type TeamView } from "./board";
+import { formatSpread, rankedName, type GameView, type TeamView } from "./board";
 import { TeamLogo } from "./team-logo";
+import { TeamName } from "./team-name";
 
 const PICKABLE_STATES = ["open", "swap", "picked"];
 
@@ -15,7 +16,7 @@ function teamNote(team: TeamView, game: GameView) {
     case "closed":
       return spread ? `Spread ${spread}` : "No line yet";
     case "swap":
-      return `Switch pick to ${team.name}`;
+      return `Switch pick to ${rankedName(team)}`;
     case "picked":
       return spread ? `Your pick · ${spread}` : "Your pick";
     case "lockedPick":
@@ -63,7 +64,9 @@ function TeamPickButton({
     >
       <TeamLogo team={team.team} name={team.name} muted={muted} />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="truncate font-semibold">{team.name}</span>
+        <span className="truncate font-semibold">
+          <TeamName team={team} />
+        </span>
         <span
           className={cn(
             "truncate text-xs text-muted-foreground",
@@ -111,7 +114,7 @@ export function GameCard({
       </div>
       <div
         role="group"
-        aria-label={`${game.away.name} at ${game.home.name}`}
+        aria-label={`${rankedName(game.away)} at ${rankedName(game.home)}`}
         className="flex min-w-0 flex-1 basis-full flex-col gap-2 sm:basis-96 sm:flex-row sm:items-center"
       >
         <TeamPickButton

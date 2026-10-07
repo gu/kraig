@@ -17,6 +17,8 @@ export interface TeamView {
   id: number;
   name: string;
   team: BoardTeam | undefined;
+  /** AP Top 25 rank going into this game's week */
+  rank: number | null;
   spread: number | null;
   state: TeamPickState;
   usedWeek: number | null;
@@ -42,6 +44,11 @@ export interface WeekView {
   picks: PickView[];
 }
 
+/** Team name prefixed with its AP rank, e.g. "#4 Texas" */
+export function rankedName(team: Pick<TeamView, "name" | "rank">) {
+  return team.rank === null ? team.name : `#${team.rank} ${team.name}`;
+}
+
 export function formatSpread(spread: number | null) {
   if (spread === null) return null;
   if (spread === 0) return "PK";
@@ -60,6 +67,7 @@ export function buildBoard(board: SheetBoard, now: Date) {
   const teamsById = new Map(board.teams.map((t) => [t.id, t]));
   const gamesById = new Map(board.games.map((g) => [g.id, g]));
   const openWeek = getOpenWeek(board.games, now);
+  const rankByWeekTeam = new Map(board.rankings.map((r) => [`${r.week}:${r.team_id}`, r.rank]));
 
   const pickByGame = new Map(board.picks.map((p) => [p.game_id, p.team_id]));
   const pickedWeekByTeam = new Map<number, { week: number; gameId: number }>();
@@ -113,6 +121,7 @@ export function buildBoard(board: SheetBoard, now: Date) {
           id,
           name: team?.school ?? (side === "home" ? game.home_team : game.away_team) ?? "TBD",
           team,
+          rank: rankByWeekTeam.get(`${week}:${id}`) ?? null,
           spread:
             game.home_spread === null
               ? null

@@ -26,7 +26,7 @@ const getSheetBoard = createServerFn({ method: "GET" })
   .handler(async ({ context, data }) => {
     const sheetId = await getOwnedSheetId(context.user.id, data.sheetDisplayId);
 
-    const [games, teams, lines, picks] = await Promise.all([
+    const [games, teams, lines, rankings, picks] = await Promise.all([
       db
         .selectFrom("ext_game")
         .select(["id", "week", "start_date", "home_id", "home_team", "away_id", "away_team"])
@@ -35,6 +35,8 @@ const getSheetBoard = createServerFn({ method: "GET" })
         .execute(),
       db.selectFrom("ext_team").select(["id", "school", "abbreviation", "logo_url"]).execute(),
       db.selectFrom("ext_line").select(["game_id", "provider", "spread", "over_under"]).execute(),
+      // AP Top 25. A week's poll is the ranking teams carry into that week's games
+      db.selectFrom("ext_ranking").select(["week", "team_id", "rank"]).execute(),
       db
         .selectFrom("sheet_pick")
         .select(["game_id", "team_id"])
@@ -66,6 +68,7 @@ const getSheetBoard = createServerFn({ method: "GET" })
         };
       }),
       teams,
+      rankings,
       picks,
     };
   });
