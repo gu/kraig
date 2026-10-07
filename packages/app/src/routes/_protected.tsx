@@ -28,7 +28,8 @@ function ProtectedRouteRoot() {
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset className="min-w-0">
-          <header className="sticky top-0 flex shrink-0 items-center gap-2 border-b bg-background p-4">
+          {/* z-10 keeps positioned page content (inputs, badges) from painting over it on scroll */}
+          <header className="sticky top-0 z-10 flex shrink-0 items-center gap-2 border-b bg-background p-4">
             <SidebarTrigger className="-ml-1" />
             <Separator
               orientation="vertical"
