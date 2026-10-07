@@ -53,7 +53,7 @@ export function PoolSwitcher() {
     return null;
   }
 
-  const activePool = userPools.find((p) => p.display_id === currentPoolDisplayId) ?? userPools[0];
+  const activePool = userPools.find((p) => p.display_id === currentPoolDisplayId);
 
   return (
     <SidebarMenu>
@@ -69,11 +69,13 @@ export function PoolSwitcher() {
                   />
                 }
               >
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <BotIcon />
-                </div>
+                {activePool && (
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                    <BotIcon />
+                  </div>
+                )}
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{activePool.name}</span>
+                  <span className="truncate font-medium">{activePool?.name ?? "Select Pool"}</span>
                 </div>
                 <ChevronsUpDownIcon className="ml-auto" />
               </DropdownMenuTrigger>
