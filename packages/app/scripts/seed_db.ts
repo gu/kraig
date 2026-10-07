@@ -174,8 +174,10 @@ const GameSchema = z.object({
   startDate: z.iso.datetime(),
   conferenceGame: z.boolean(),
   homeId: z.number(),
+  homeTeam: z.string(),
   homeConference: z.string(),
   awayId: z.number(),
+  awayTeam: z.string(),
   awayConference: z.string(),
 });
 const allGamesRaw = await Promise.all(
@@ -184,6 +186,7 @@ const allGamesRaw = await Promise.all(
       .get("https://api.collegefootballdata.com/games", {
         searchParams: {
           year: getYear(new Date()),
+          seasonType: "regular",
           team: t.school,
         },
       })
@@ -219,8 +222,10 @@ await db.transaction().execute(async (trx) => {
         start_date: g.startDate,
         conference_game: g.conferenceGame,
         away_id: g.awayId,
+        away_team: g.awayTeam,
         away_conference: g.awayConference,
         home_id: g.homeId,
+        home_team: g.homeTeam,
         home_conference: g.homeConference,
       })),
     )
@@ -230,8 +235,10 @@ await db.transaction().execute(async (trx) => {
         start_date: eb.ref("excluded.start_date"),
         conference_game: eb.ref("excluded.conference_game"),
         away_id: eb.ref("excluded.away_id"),
+        away_team: eb.ref("excluded.away_team"),
         away_conference: eb.ref("excluded.away_conference"),
         home_id: eb.ref("excluded.home_id"),
+        home_team: eb.ref("excluded.home_team"),
         home_conference: eb.ref("excluded.home_conference"),
       })),
     )

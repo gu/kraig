@@ -38,9 +38,11 @@ export interface ExtConference {
 export interface ExtGame {
   away_conference: string;
   away_id: number;
+  away_team: string | null;
   conference_game: boolean;
   home_conference: string;
   home_id: number;
+  home_team: string | null;
   id: number;
   start_date: Timestamp;
   week: number;
@@ -96,6 +98,15 @@ export interface Sheet {
   updated_at: Generated<Timestamp>;
 }
 
+export interface SheetPick {
+  created_at: Generated<Timestamp>;
+  game_id: number;
+  id: Generated<number>;
+  sheet_id: number;
+  team_id: number;
+  updated_at: Generated<Timestamp>;
+}
+
 export interface User {
   createdAt: Generated<Timestamp>;
   email: string;
@@ -124,6 +135,7 @@ export interface DB {
   pool: Pool;
   session: Session;
   sheet: Sheet;
+  sheet_pick: SheetPick;
   user: User;
   verification: Verification;
 }
