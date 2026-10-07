@@ -10,5 +10,5 @@
   "files.readonlyInclude": {
     "**/routeTree.gen.ts": true
   },
-  "workbench.colorTheme": "GitHub Dark"
+  "workbench.colorTheme": "One Dark Pro"
 }
