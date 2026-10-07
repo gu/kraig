@@ -5,6 +5,7 @@ import { conferences } from "./conferences.ts";
 import { teams } from "./teams.ts";
 import { games } from "./games.ts";
 import { lines } from "./lines.ts";
+import { rankings } from "./rankings.ts";
 import {
   type CfbdRequest,
   conferenceRow,
@@ -56,6 +57,22 @@ const apiLine = (provider: string, spread: number) => ({
   overUnderOpen: null,
   homeMoneyline: null,
   awayMoneyline: null,
+});
+
+const apiRank = (rank: number, teamId: number) => ({
+  rank,
+  teamId,
+  school: `School ${teamId}`,
+  conference: "SEC",
+  firstPlaceVotes: rank === 1 ? 60 : 0,
+  points: 1600 - rank * 50,
+});
+
+const apiRankingWeek = (week: number, polls: Record<string, ReturnType<typeof apiRank>[]>) => ({
+  season: 2026,
+  seasonType: "regular",
+  week,
+  polls: Object.entries(polls).map(([poll, ranks]) => ({ poll, ranks })),
 });
 // #endregion
 
@@ -202,6 +219,85 @@ describe("syncers", () => {
       expect(rows).toEqual([
         { game_id: 100, provider: "Bovada", spread: -4, over_under: 50.5 },
         { game_id: 100, provider: "OldBook", spread: null, over_under: null },
+      ]);
+    });
+  });
+
+  describe("rankings", () => {
+    it("syncs the AP Top 25 for every regular season week in one request", async () => {
+      const { ctx, requests } = contextWith(() => [
+        apiRankingWeek(1, {
+          "AP Top 25": [apiRank(1, 10), apiRank(2, 20)],
+          "Coaches Poll": [apiRank(1, 20), apiRank(2, 10)],
+        }),
+        apiRankingWeek(2, {
+          "Coaches Poll": [apiRank(1, 10)],
+          // Tied teams share a rank
+          "AP Top 25": [apiRank(1, 20), apiRank(2, 10), apiRank(2, 30)],
+        }),
+      ]);
+
+      const result = await rankings.run(ctx);
+
+      expect(requests).toEqual([
+        { path: "rankings", searchParams: { year: 2026, seasonType: "regular" } },
+      ]);
+      expect(result).toMatchObject({ fetched: 5, inserted: 5 });
+      const rows = await db
+        .selectFrom("ext_ranking")
+        .select(["week", "rank", "team_id"])
+        .orderBy(["week", "rank", "team_id"])
+        .execute();
+      expect(rows).toEqual([
+        { week: 1, rank: 1, team_id: 10 },
+        { week: 1, rank: 2, team_id: 20 },
+        { week: 2, rank: 1, team_id: 20 },
+        { week: 2, rank: 2, team_id: 10 },
+        { week: 2, rank: 2, team_id: 30 },
+      ]);
+      expect(
+        await db
+          .selectFrom("ext_ranking")
+          .selectAll()
+          .where("team_id", "=", 10)
+          .where("week", "=", 1)
+          .executeTakeFirst(),
+      ).toEqual({
+        week: 1,
+        team_id: 10,
+        rank: 1,
+        school: "School 10",
+        conference: "SEC",
+        first_place_votes: 60,
+        points: 1550,
+      });
+    });
+
+    it("updates a week's ranks and reports teams that dropped out as stale", async () => {
+      await db
+        .insertInto("ext_ranking")
+        .values([
+          { week: 1, team_id: 10, rank: 1, school: "School 10" },
+          { week: 1, team_id: 99, rank: 2, school: "School 99" },
+        ])
+        .execute();
+      const { ctx } = contextWith(() => [
+        apiRankingWeek(1, { "AP Top 25": [apiRank(2, 10), apiRank(1, 20)] }),
+      ]);
+
+      const result = await rankings.run(ctx);
+
+      expect(result).toMatchObject({ inserted: 1, updated: 1 });
+      expect(result.stale).toMatchObject([{ week: 1, team_id: 99 }]);
+      const ranks = await db
+        .selectFrom("ext_ranking")
+        .select(["team_id", "rank"])
+        .orderBy("team_id")
+        .execute();
+      expect(ranks).toEqual([
+        { team_id: 10, rank: 2 },
+        { team_id: 20, rank: 1 },
+        { team_id: 99, rank: 2 },
       ]);
     });
   });

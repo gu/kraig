@@ -6,9 +6,11 @@ import { conferences } from "./syncers/conferences.ts";
 import { teams } from "./syncers/teams.ts";
 import { games } from "./syncers/games.ts";
 import { lines } from "./syncers/lines.ts";
+import { rankings } from "./syncers/rankings.ts";
 
-// Ordered by dependency: each syncer scopes its requests using the tables synced before it
-const Syncers: readonly Syncer[] = [conferences, teams, games, lines];
+// Ordered by dependency: each syncer scopes its requests using the tables synced before it.
+// Rankings don't depend on any other table.
+const Syncers: readonly Syncer[] = [conferences, teams, games, lines, rankings];
 const SyncerNames = Syncers.map((s) => s.name);
 
 const Usage = `Usage: node scripts/sync/index.ts [${SyncerNames.join("|")} ...] [options]

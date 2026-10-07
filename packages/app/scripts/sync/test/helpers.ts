@@ -28,7 +28,7 @@ export async function createTestDb(): Promise<Kysely<DB>> {
 }
 
 export async function resetExtTables(db: Kysely<DB>) {
-  await sql`truncate ext_line, ext_game, ext_team, ext_conference cascade`.execute(db);
+  await sql`truncate ext_ranking, ext_line, ext_game, ext_team, ext_conference cascade`.execute(db);
 }
 
 export type CfbdRequest = { path: string; searchParams: SearchParams };

@@ -60,6 +60,16 @@ export interface ExtLine {
   spread_open: number | null;
 }
 
+export interface ExtRanking {
+  conference: string | null;
+  first_place_votes: number | null;
+  points: number | null;
+  rank: number;
+  school: string;
+  team_id: number;
+  week: number;
+}
+
 export interface ExtTeam {
   abbreviation: string | null;
   conference: string;
@@ -131,6 +141,7 @@ export interface DB {
   ext_conference: ExtConference;
   ext_game: ExtGame;
   ext_line: ExtLine;
+  ext_ranking: ExtRanking;
   ext_team: ExtTeam;
   pool: Pool;
   session: Session;

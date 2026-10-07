@@ -11,7 +11,7 @@ pnpm dev
 
 # External Data Sync
 
-College football data (conferences, teams, games and betting lines) comes from the [CollegeFootballData API](https://collegefootballdata.com) and is stored in the `ext_*` tables. The sync CLI in `scripts/sync/` pulls that data into the database.
+College football data (conferences, teams, games, betting lines and AP Top 25 rankings) comes from the [CollegeFootballData API](https://collegefootballdata.com) and is stored in the `ext_*` tables. The sync CLI in `scripts/sync/` pulls that data into the database.
 
 It requires `DATABASE_URL` and `CFBD_API_KEY` in `.env.local` or `.env`, and a migrated database (`pnpm migrate`).
 
@@ -32,15 +32,17 @@ pnpm sync-external-data -- teams --year 2025     # sync a different season
 
 ## How it works
 
-- **Tables:** `conferences` → `teams` → `games` → `lines`. Selected tables always run in this order.
+- **Tables:** `conferences` → `teams` → `games` → `lines`, then `rankings`. Selected tables always run in this order.
 - **Scope:** each table is scoped by the tables before it, read from the database:
   - teams in the synced conferences;
   - games involving the synced teams;
   - lines for the synced games.
 
+  `rankings` doesn't depend on other tables. It stores the AP Top 25 for every regular-season week released so far, fetched in a single request. Ranked teams outside the synced conferences are included, so `ext_ranking.team_id` has no foreign key to `ext_team`.
+
   This means a table can be synced on its own once the tables it depends on have been synced. If one of them is empty, the sync fails with an error saying which table to sync first.
 
-- **Upserts:** rows are inserted or updated by primary key (`id`, or `(game_id, provider)` for lines), in one transaction per table.
+- **Upserts:** rows are inserted or updated by primary key (`id`; `(game_id, provider)` for lines; `(week, team_id)` for rankings, since tied teams share a rank), in one transaction per table.
 - **Stale records are reported, never deleted.** Rows that are in the database but no longer returned by CFBD are listed in a report at the end of the run. Clean them up manually if needed. Deleting a game or team would cascade to users' `sheet_pick` rows. The `ext_*` tables don't store the season, so syncing a different `--year` reports the other season's rows as stale.
 - **Rate limiting:** CFBD requests go through a throttle, controlled by `--concurrency` and `--interval`. Failed requests (429 and 5xx) are retried up to 5 times with jittered backoff, honoring the `Retry-After` header.
 
