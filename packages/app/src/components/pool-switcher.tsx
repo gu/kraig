@@ -15,37 +15,17 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { BotIcon, ChevronsUpDownIcon } from "lucide-react";
-import { createServerFn } from "@tanstack/react-start";
-import { authMiddleware } from "#/middleware/auth";
-import db from "@db/client";
-import { useQuery } from "@tanstack/react-query";
+import { usePools } from "#/hooks/use-pools";
 import { useCurrentPoolDisplayId } from "#/hooks/use-current-pool-display-id";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { queryClient } from "#/lib/query-client";
-
-const getUserPools = createServerFn({ method: "GET" })
-  .middleware([authMiddleware])
-  .handler(async ({ context }) => {
-    const userId = context.user.id;
-
-    const pools = await db
-      .selectFrom("pool")
-      .select(["id", "display_id", "name", "created_at"])
-      .where("owner_id", "=", userId)
-      .execute();
-
-    return pools;
-  });
 
 export function PoolSwitcher() {
   const router = useRouter();
   const navigate = useNavigate();
   const currentPoolDisplayId = useCurrentPoolDisplayId();
 
-  const { data: userPools } = useQuery({
-    queryKey: ["pools", "user"],
-    queryFn: () => getUserPools(),
-  });
+  const { data: userPools } = usePools();
 
   const { isMobile } = useSidebar();
 
