@@ -82,9 +82,8 @@ export function EditSheetNameDialog({
     >
       <DialogTrigger
         render={
-          <Button variant="outline" size="sm">
+          <Button variant="ghost" size="icon-sm" aria-label="Edit sheet name">
             <PencilIcon />
-            Edit Name
           </Button>
         }
       />

@@ -52,7 +52,7 @@ function TeamPickButton({
       disabled={!pickable || busy}
       onClick={() => onPick(team)}
       className={cn(
-        "flex min-h-14 min-w-0 flex-1 basis-40 items-center gap-2.5 rounded-lg border bg-card py-2 pr-3 pl-2 text-left transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed",
+        "flex min-h-14 w-full min-w-0 items-center sm:w-auto sm:flex-1 sm:basis-40 gap-2.5 rounded-lg border bg-card py-2 pr-3 pl-2 text-left transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed",
         pickable && "hover:bg-muted",
         team.state === "picked" &&
           "border-primary bg-primary/10 ring-1 ring-primary hover:bg-primary/15",
@@ -97,7 +97,7 @@ export function GameCard({
 
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-3">
-      <div className="flex w-28 shrink-0 flex-col items-start gap-1">
+      <div className="flex w-full shrink-0 items-center gap-2 sm:w-28 sm:flex-col sm:items-start sm:gap-1">
         {game.started ? (
           <Badge variant="secondary">Started</Badge>
         ) : (
@@ -112,7 +112,7 @@ export function GameCard({
       <div
         role="group"
         aria-label={`${game.away.name} at ${game.home.name}`}
-        className="flex min-w-0 flex-1 basis-96 flex-wrap items-center gap-2"
+        className="flex min-w-0 flex-1 basis-full flex-col gap-2 sm:basis-96 sm:flex-row sm:items-center"
       >
         <TeamPickButton
           team={game.away}
@@ -120,7 +120,7 @@ export function GameCard({
           busy={busy}
           onPick={(team) => onPick(game, team)}
         />
-        <span className="text-xs text-muted-foreground">at</span>
+        <span className="self-center text-xs text-muted-foreground">at</span>
         <TeamPickButton
           team={game.home}
           game={game}

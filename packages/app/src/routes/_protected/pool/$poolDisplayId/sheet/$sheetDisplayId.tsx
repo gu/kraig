@@ -4,7 +4,7 @@ import { GameCard, isGamePickable } from "#/components/picks/game-card";
 import { UsedTeamsCard } from "#/components/picks/used-teams-card";
 import { WeekPicksCard } from "#/components/picks/week-picks-card";
 import { WeekTabs } from "#/components/picks/week-tabs";
-import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "#/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "#/components/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "#/components/ui/empty";
 import { Input } from "#/components/ui/input";
 import { Skeleton } from "#/components/ui/skeleton";
@@ -95,12 +95,19 @@ function Sheet() {
   return (
     <div className="flex flex-col gap-4 p-4">
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">{sheet?.name}</CardTitle>
-          <CardDescription>
-            {selectedWeek ? `Week ${selectedWeek.week} · ${selectedWeek.dates}` : " "}
-          </CardDescription>
-          <CardAction className="flex flex-wrap items-center gap-4">
+        <CardHeader className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+          <div className="flex min-w-0 flex-col gap-1">
+            <div className="flex min-w-0 items-center gap-1">
+              <CardTitle className="truncate text-lg">{sheet?.name}</CardTitle>
+              {sheet && (
+                <EditSheetNameDialog sheetDisplayId={sheetDisplayId} currentName={sheet.name} />
+              )}
+            </div>
+            <CardDescription>
+              {selectedWeek ? `Week ${selectedWeek.week} · ${selectedWeek.dates}` : " "}
+            </CardDescription>
+          </div>
+          <div className="flex flex-wrap items-center gap-4">
             {selectedWeek && (
               <div className="flex flex-col gap-1.5">
                 <div className="text-sm text-muted-foreground">
@@ -122,10 +129,7 @@ function Sheet() {
                 </div>
               </div>
             )}
-            {sheet && (
-              <EditSheetNameDialog sheetDisplayId={sheetDisplayId} currentName={sheet.name} />
-            )}
-          </CardAction>
+          </div>
         </CardHeader>
       </Card>
 
@@ -152,7 +156,7 @@ function Sheet() {
           <WeekTabs weeks={weeks} selectedWeek={selectedWeek.week} onSelect={selectWeek} />
 
           <div className="flex flex-wrap items-start gap-4">
-            <main className="flex min-w-0 flex-[999_1_560px] flex-col gap-4">
+            <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-4">
               {selectedWeek.state !== "open" && (
                 <div className="flex items-center gap-2.5 rounded-lg bg-muted px-3 py-2.5 text-sm text-muted-foreground">
                   <LockIcon className="size-4 shrink-0" aria-hidden="true" />
@@ -209,7 +213,7 @@ function Sheet() {
                   </EmptyHeader>
                 </Empty>
               )}
-            </main>
+            </div>
 
             <aside className="flex min-w-0 flex-[1_1_300px] flex-col gap-4">
               <WeekPicksCard week={selectedWeek} busy={busy} onRemove={onRemove} />
