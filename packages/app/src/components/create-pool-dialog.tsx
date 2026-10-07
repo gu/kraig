@@ -19,6 +19,7 @@ import { toast } from "./ui/toast";
 import { useState } from "react";
 import { CirclePlus } from "lucide-react";
 import { SidebarGroup, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "./ui/sidebar";
+import { queryClient } from "#/lib/query-client";
 
 const createPool = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
@@ -52,6 +53,7 @@ export function CreatePoolDialog() {
       console.log(value);
       try {
         await createPool({ data: { ...value } });
+        await queryClient.invalidateQueries({ queryKey: ["pools"] });
         toast.add({
           type: "success",
           title: "Successfully created new pool",
