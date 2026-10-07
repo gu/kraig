@@ -28,6 +28,16 @@ export interface Account {
   userId: string;
 }
 
+export interface ExtApRanking {
+  conference: string | null;
+  first_place_votes: number | null;
+  points: number | null;
+  rank: number;
+  school: string;
+  team_id: number;
+  week: number;
+}
+
 export interface ExtConference {
   abbreviation: string;
   id: number;
@@ -128,6 +138,7 @@ export interface Verification {
 
 export interface DB {
   account: Account;
+  ext_ap_ranking: ExtApRanking;
   ext_conference: ExtConference;
   ext_game: ExtGame;
   ext_line: ExtLine;

@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "generate-db-types": "kysely-codegen --out-file db/types/index.d.ts",
     "migrate": "auth migrate --config src/lib/auth.ts --yes && kysely migrate:latest",
-    "seed-external-data": "node scripts/seed_db.ts"
+    "seed-external-data": "node scripts/seed_db.ts",
+    "update-games": "node scripts/update_games.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

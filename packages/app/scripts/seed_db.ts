@@ -1,33 +1,8 @@
-import ky from "ky";
-import dotenv from "dotenv";
 import { z } from "zod";
 import { getYear } from "date-fns";
-import { Kysely, PostgresDialect } from "kysely";
-import { Pool } from "pg";
-import type { DB } from "@db/types";
+import { createClients, syncApRankings, syncGames, syncLines } from "./lib/external.ts";
 
-// #region Read in config from env
-dotenv.config({ path: [".env.local", ".env"] });
-const ConfigSchema = z.object({
-  DATABASE_URL: z.string(),
-  CFBD_API_KEY: z.string(),
-});
-const config = ConfigSchema.parse(process.env);
-// #endregion
-
-// #region Create clients
-const client = ky.create({
-  headers: {
-    Authorization: `Bearer ${config.CFBD_API_KEY}`,
-  },
-});
-const dialect = new PostgresDialect({
-  pool: new Pool({
-    connectionString: config.DATABASE_URL,
-  }),
-});
-const db = new Kysely<DB>({ dialect });
-// #endregion
+const { client, db } = createClients();
 
 // #region Defined allowed conference abbreviations. Pulled directly from CFBD
 const AllowedConferenceAbbreviations: readonly string[] = [
@@ -167,151 +142,15 @@ await db.transaction().execute(async (trx) => {
 });
 // #endregion
 
-// #region Get external games data
-const GameSchema = z.object({
-  id: z.number(),
-  week: z.number(),
-  startDate: z.iso.datetime(),
-  conferenceGame: z.boolean(),
-  homeId: z.number(),
-  homeTeam: z.string(),
-  homeConference: z.string(),
-  awayId: z.number(),
-  awayTeam: z.string(),
-  awayConference: z.string(),
+// #region Update game, betting line and AP ranking data in db
+const gameIds = await syncGames({ client, db, schools: teamData.map((t) => t.school) });
+await syncLines({
+  client,
+  db,
+  conferenceAbbreviations: conferenceData.map((c) => c.abbreviation!),
+  gameIds,
 });
-const allGamesRaw = await Promise.all(
-  teamData.map(async (t) => {
-    const rawGameResponse = await client
-      .get("https://api.collegefootballdata.com/games", {
-        searchParams: {
-          year: getYear(new Date()),
-          seasonType: "regular",
-          team: t.school,
-        },
-      })
-      .json();
-    return z.array(GameSchema).parse(rawGameResponse);
-  }),
-);
-const allGamesDupe = allGamesRaw.flat();
-const gameData = Array.from(new Map(allGamesDupe.map((g) => [g.id, g])).values());
-const gameIds = gameData.map((g) => g.id);
-// #endregion
-
-// #region Update game data in db
-const currentGameIds = (await db.selectFrom("ext_game").select("id").execute()).map((t) => t.id);
-
-const gameIdsToRemove = currentGameIds.filter((g) => !gameIds.includes(g));
-
-await db.transaction().execute(async (trx) => {
-  if (gameIdsToRemove.length > 0) {
-    const deleteGamesResult = await trx
-      .deleteFrom("ext_game")
-      .where("id", "in", gameIdsToRemove)
-      .executeTakeFirstOrThrow();
-    console.log(`> Removed ${deleteGamesResult.numDeletedRows} games`);
-  }
-
-  const insertGamesResult = await trx
-    .insertInto("ext_game")
-    .values(
-      gameData.map((g) => ({
-        id: g.id,
-        week: g.week,
-        start_date: g.startDate,
-        conference_game: g.conferenceGame,
-        away_id: g.awayId,
-        away_team: g.awayTeam,
-        away_conference: g.awayConference,
-        home_id: g.homeId,
-        home_team: g.homeTeam,
-        home_conference: g.homeConference,
-      })),
-    )
-    .onConflict((oc) =>
-      oc.column("id").doUpdateSet((eb) => ({
-        week: eb.ref("excluded.week"),
-        start_date: eb.ref("excluded.start_date"),
-        conference_game: eb.ref("excluded.conference_game"),
-        away_id: eb.ref("excluded.away_id"),
-        away_team: eb.ref("excluded.away_team"),
-        away_conference: eb.ref("excluded.away_conference"),
-        home_id: eb.ref("excluded.home_id"),
-        home_team: eb.ref("excluded.home_team"),
-        home_conference: eb.ref("excluded.home_conference"),
-      })),
-    )
-    .executeTakeFirstOrThrow();
-  console.log(
-    `> Inserted/Updated ${insertGamesResult.numInsertedOrUpdatedRows} games into database`,
-  );
-});
-// #endregion
-
-// #region Get external betting line data
-const GameLineSchema = z.object({
-  provider: z.string(),
-  spread: z.number().nullable(),
-  formattedSpread: z.string(),
-  spreadOpen: z.number().nullable(),
-  overUnder: z.number().nullable(),
-  overUnderOpen: z.number().nullable(),
-  homeMoneyline: z.number().nullable(),
-  awayMoneyline: z.number().nullable(),
-});
-const BettingGameSchema = z.object({
-  id: z.number(),
-  lines: z.array(GameLineSchema),
-});
-const allBettingGamesRaw = await Promise.all(
-  conferenceData.map(async (c) => {
-    const rawLinesResponse = await client
-      .get("https://api.collegefootballdata.com/lines", {
-        searchParams: {
-          year: getYear(new Date()),
-          conference: c.abbreviation!,
-        },
-      })
-      .json();
-    return z.array(BettingGameSchema).parse(rawLinesResponse);
-  }),
-);
-const bettingGameData = Array.from(
-  new Map(allBettingGamesRaw.flat().map((g) => [g.id, g])).values(),
-).filter((g) => gameIds.includes(g.id));
-const lineData = bettingGameData.flatMap((g) =>
-  g.lines.map((l) => ({
-    game_id: g.id,
-    provider: l.provider,
-    spread: l.spread,
-    formatted_spread: l.formattedSpread,
-    spread_open: l.spreadOpen,
-    over_under: l.overUnder,
-    over_under_open: l.overUnderOpen,
-    home_moneyline: l.homeMoneyline,
-    away_moneyline: l.awayMoneyline,
-  })),
-);
-console.log(`> Got ${lineData.length} betting line entries to insert`);
-// #endregion
-
-// #region Update betting line data in db
-await db.transaction().execute(async (trx) => {
-  // Replace all lines so that lines a provider no longer offers are removed
-  const deleteLinesResult = await trx.deleteFrom("ext_line").executeTakeFirstOrThrow();
-  console.log(`> Removed ${deleteLinesResult.numDeletedRows} betting lines`);
-
-  if (lineData.length > 0) {
-    const insertLinesResult = await trx
-      .insertInto("ext_line")
-      .values(lineData)
-      .executeTakeFirstOrThrow();
-    console.log(
-      `> Inserted ${insertLinesResult.numInsertedOrUpdatedRows} betting lines into database`,
-    );
-  }
-});
+await syncApRankings({ client, db });
 // #endregion
 
 // #region Cleanup
