@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { SheetBoard } from "#/hooks/use-sheet-picks";
+import { DEFAULT_POOL_SETTINGS } from "#/lib/pool-settings";
 import { buildBoard } from "./board";
 import { GameCard } from "./game-card";
 import { GameSortMenu, isGameSort, sortGames } from "./game-sort";
@@ -32,9 +33,17 @@ const boardData: SheetBoard = {
     game(5, "2026-09-11T12:00:00.000Z", 21.5),
     game(6, "2026-09-12T12:00:00.000Z", null),
   ],
-  teams: [],
+  // Only home teams are in the pool's conferences
+  teams: [1, 2, 3, 4, 5, 6].map((id) => ({
+    id: id * 10,
+    school: `Home ${id}`,
+    abbreviation: null,
+    logo_url: null,
+    conference: "SEC",
+  })),
   rankings: [],
   picks: [],
+  pool: DEFAULT_POOL_SETTINGS,
 };
 
 const games = buildBoard(boardData, now).weeks[0].games;

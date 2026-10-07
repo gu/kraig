@@ -9,7 +9,6 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@/components/ui/item";
-import { PICKS_PER_WEEK } from "#/lib/picks";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { LockIcon, XIcon } from "lucide-react";
@@ -56,7 +55,7 @@ export function WeekPicksCard({
   busy: boolean;
   onRemove: (pick: PickView) => void;
 }) {
-  const emptySlots = Math.max(PICKS_PER_WEEK - week.picks.length, 0);
+  const emptySlots = Math.max(week.picksPerWeek - week.picks.length, 0);
   const emptyText =
     week.state === "open"
       ? "Pick a team"
@@ -69,7 +68,7 @@ export function WeekPicksCard({
       <CardHeader>
         <CardTitle>Week {week.week} picks</CardTitle>
         <CardAction className="text-sm text-muted-foreground">
-          {week.picks.length} / {PICKS_PER_WEEK}
+          {week.picks.length} / {week.picksPerWeek}
         </CardAction>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">

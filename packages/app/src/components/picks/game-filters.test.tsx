@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { SheetBoard } from "#/hooks/use-sheet-picks";
+import { DEFAULT_POOL_SETTINGS } from "#/lib/pool-settings";
 import { buildBoard } from "./board";
 import {
   ActiveGameFilters,
@@ -13,12 +14,23 @@ import {
 // Week 2 is the open week
 const now = new Date("2026-09-10T00:00:00Z");
 
-const team = (id: number, school: string) => ({ id, school, abbreviation: null, logo_url: null });
+const team = (id: number, school: string) => ({
+  id,
+  school,
+  abbreviation: null,
+  logo_url: null,
+  conference: "SEC",
+});
 
-const game = (id: number, homeId: number, awayId: number) => ({
+const game = (
+  id: number,
+  homeId: number,
+  awayId: number,
+  startDate = "2026-09-12T16:00:00.000Z",
+) => ({
   id,
   week: 2,
-  start_date: "2026-09-12T16:00:00.000Z",
+  start_date: startDate,
   home_id: homeId,
   home_team: `Team ${homeId}`,
   away_id: awayId,
@@ -34,10 +46,19 @@ const boardData: SheetBoard = {
   games: [
     game(1, 1, 2), // pickable, ranked
     game(2, 2, 3), // pickable, unranked
-    game(3, 8, 9), // teams outside the pool, ranked
-    game(4, 6, 7), // teams outside the pool, unranked
+    game(3, 8, 9, "2026-09-09T16:00:00.000Z"), // started, ranked
+    game(4, 6, 7, "2026-09-09T16:00:00.000Z"), // started, unranked
+    game(5, 10, 11), // teams outside the pool, so not listed
   ],
-  teams: [team(1, "Texas"), team(2, "Michigan"), team(3, "Purdue")],
+  teams: [
+    team(1, "Texas"),
+    team(2, "Michigan"),
+    team(3, "Purdue"),
+    team(6, "Iowa"),
+    team(7, "Utah"),
+    team(8, "Oregon"),
+    team(9, "USC"),
+  ],
   rankings: [
     { week: 2, team_id: 1, rank: 3 },
     { week: 2, team_id: 9, rank: 20 },
@@ -45,6 +66,7 @@ const boardData: SheetBoard = {
     { week: 1, team_id: 2, rank: 10 },
   ],
   picks: [],
+  pool: DEFAULT_POOL_SETTINGS,
 };
 
 const games = buildBoard(boardData, now).weeks[0].games;

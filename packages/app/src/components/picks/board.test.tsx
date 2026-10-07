@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { SheetBoard } from "#/hooks/use-sheet-picks";
+import { DEFAULT_POOL_SETTINGS } from "#/lib/pool-settings";
 import { buildBoard, rankedName } from "./board";
 import { GameCard } from "./game-card";
 import { WeekPicksCard } from "./week-picks-card";
@@ -12,6 +13,7 @@ const team = (id: number, school: string) => ({
   school,
   abbreviation: school.slice(0, 3).toUpperCase(),
   logo_url: null,
+  conference: "SEC",
 });
 
 const game = (id: number, week: number, homeId: number, awayId: number) => ({
@@ -38,6 +40,7 @@ const board = (overrides: Partial<SheetBoard> = {}): SheetBoard => ({
     { week: 2, team_id: 1, rank: 2 },
   ],
   picks: [],
+  pool: DEFAULT_POOL_SETTINGS,
   ...overrides,
 });
 

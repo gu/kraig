@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { SheetBoard } from "#/hooks/use-sheet-picks";
+import { DEFAULT_POOL_SETTINGS } from "#/lib/pool-settings";
 import { buildBoard } from "./board";
 import { GameCard } from "./game-card";
 import { SheetStats, sheetStats } from "./sheet-stats";
@@ -10,7 +11,13 @@ import { WeekPicksStrip } from "./week-picks-strip";
 // Week 1 is over; week 2 hasn't kicked off
 const now = new Date("2026-09-10T00:00:00Z");
 
-const team = (id: number, school: string) => ({ id, school, abbreviation: null, logo_url: null });
+const team = (id: number, school: string) => ({
+  id,
+  school,
+  abbreviation: null,
+  logo_url: null,
+  conference: "SEC",
+});
 
 const game = (
   id: number,
@@ -58,6 +65,7 @@ const boardData: SheetBoard = {
     { game_id: 12, team_id: 5 },
     { game_id: 20, team_id: 3 },
   ],
+  pool: DEFAULT_POOL_SETTINGS,
 };
 
 const { weeks } = buildBoard(boardData, now);

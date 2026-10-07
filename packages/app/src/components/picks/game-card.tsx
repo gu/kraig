@@ -1,6 +1,5 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { PICKS_PER_WEEK } from "#/lib/picks";
 import { ArrowLeftRightIcon, CheckIcon, LockIcon } from "lucide-react";
 import { format } from "date-fns";
 import { formatSpread, isFinal, rankedName, type GameView, type TeamView } from "./board";
@@ -30,7 +29,7 @@ function teamNote(team: TeamView, game: GameView) {
     case "started":
       return team.points === null ? "Game started" : "Final";
     case "full":
-      return `${PICKS_PER_WEEK} of ${PICKS_PER_WEEK} picks made`;
+      return "All picks made this week";
     case "unavailable":
       return "Not in this pool";
   }
@@ -50,6 +49,9 @@ function TeamPickButton({
   const pickable = PICKABLE_STATES.includes(team.state);
   const muted = team.state === "used" || team.state === "started" || team.state === "unavailable";
   const final = team.points !== null;
+  const opponent = team === game.home ? game.away : game.home;
+  // Bold the team that won the game, even when a pick is scored against the spread
+  const wonGame = final && opponent.points !== null && team.points! > opponent.points;
   // A final pick is colored by whether it won
   const resultTone = team.state === "lockedPick" && team.result !== null && pickTone(team, false);
 
@@ -93,7 +95,7 @@ function TeamPickButton({
         <span
           className={cn(
             "text-lg tabular-nums",
-            team.result === "win" ? "font-bold text-foreground" : "text-muted-foreground",
+            wonGame ? "font-bold text-foreground" : "text-muted-foreground",
           )}
         >
           {team.points}

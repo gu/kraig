@@ -1,13 +1,20 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { SheetBoard } from "#/hooks/use-sheet-picks";
+import { DEFAULT_POOL_SETTINGS } from "#/lib/pool-settings";
 import { buildBoard } from "./board";
 import { WeekPicksStrip } from "./week-picks-strip";
 
 // Week 2 is open; its first game has already kicked off
 const now = new Date("2026-09-12T17:00:00Z");
 
-const team = (id: number, school: string) => ({ id, school, abbreviation: null, logo_url: null });
+const team = (id: number, school: string) => ({
+  id,
+  school,
+  abbreviation: null,
+  logo_url: null,
+  conference: "SEC",
+});
 
 const game = (id: number, week: number, startDate: string, homeId: number, awayId: number) => ({
   id,
@@ -41,6 +48,7 @@ const boardData: SheetBoard = {
     { game_id: 20, team_id: 2 },
     { game_id: 21, team_id: 3 },
   ],
+  pool: DEFAULT_POOL_SETTINGS,
 };
 
 const weeks = buildBoard(boardData, now).weeks;

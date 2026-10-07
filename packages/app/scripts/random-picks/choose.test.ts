@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PICKS_PER_WEEK } from "../../src/lib/picks.ts";
+import { DEFAULT_PICKS_PER_WEEK } from "../../src/lib/pool-settings.ts";
 import { chooseRandomPicks, type Game } from "./choose.ts";
 
 // Week w has `count` games between unique teams
@@ -26,7 +26,7 @@ function seeded(seed: number) {
 }
 
 describe("chooseRandomPicks", () => {
-  it("makes PICKS_PER_WEEK picks for each requested week only", () => {
+  it("makes the default number of picks for each requested week only", () => {
     const games = makeGames(4, 10);
     const picks = chooseRandomPicks({
       games,
@@ -38,9 +38,24 @@ describe("chooseRandomPicks", () => {
 
     const weekOf = (gameId: number) => games.find((g) => g.id === gameId)!.week;
     for (const week of [1, 2, 3]) {
-      expect(picks.filter((p) => weekOf(p.game_id) === week)).toHaveLength(PICKS_PER_WEEK);
+      expect(picks.filter((p) => weekOf(p.game_id) === week)).toHaveLength(DEFAULT_PICKS_PER_WEEK);
     }
     expect(picks.some((p) => weekOf(p.game_id) === 4)).toBe(false);
+  });
+
+  it("follows the pool's picks per week", () => {
+    const games = makeGames(2, 10);
+    const picks = chooseRandomPicks({
+      games,
+      teams: allTeams(games),
+      weeks: [1, 2],
+      existing: [],
+      picksPerWeek: 2,
+      random: seeded(3),
+    });
+
+    expect(picks.filter((p) => p.game_id < 200)).toHaveLength(2);
+    expect(picks.filter((p) => p.game_id >= 200)).toHaveLength(2);
   });
 
   it("picks a team playing in the game", () => {
@@ -70,7 +85,7 @@ describe("chooseRandomPicks", () => {
       random: seeded(2),
     });
 
-    expect(picks.filter((p) => p.game_id < 200)).toHaveLength(PICKS_PER_WEEK - 2);
+    expect(picks.filter((p) => p.game_id < 200)).toHaveLength(DEFAULT_PICKS_PER_WEEK - 2);
     expect(picks.map((p) => p.game_id)).not.toContain(100);
     expect(picks.map((p) => p.game_id)).not.toContain(101);
     const teams = [...existing, ...picks].map((p) => p.team_id);

@@ -1,5 +1,6 @@
 import type { BoardGame, BoardTeam, SheetBoard } from "#/hooks/use-sheet-picks";
-import { getOpenWeek, getWeekState, hasStarted, PICKS_PER_WEEK, type WeekState } from "#/lib/picks";
+import { getOpenWeek, getWeekState, hasStarted, type WeekState } from "#/lib/picks";
+import { isConferenceInPool, type PickType, type PoolSettings } from "#/lib/pool-settings";
 import { format, isSameMonth } from "date-fns";
 
 export type TeamPickState =
@@ -24,7 +25,8 @@ export interface TeamView {
   usedWeek: number | null;
   /** Final score, null until the game is final */
   points: number | null;
-  /** Null until the game is final (or if it ended in a tie) */
+  /** Whether a pick of this team won, under the pool's pick type. Null until the game is final,
+   * and for a tie or a push against the spread */
   result: PickResult | null;
 }
 
@@ -50,6 +52,7 @@ export interface WeekView {
   dates: string;
   games: GameView[];
   picks: PickView[];
+  picksPerWeek: number;
 }
 
 /** Team name prefixed with its AP rank, e.g. "#4 Texas" */
@@ -68,11 +71,25 @@ export function isFinal(game: BoardGame) {
   return game.completed && game.home_points !== null && game.away_points !== null;
 }
 
-/** Whether `teamId` won `game`, once the game is final */
-export function pickResult(game: BoardGame, teamId: number): PickResult | null {
-  if (!isFinal(game) || game.home_points === game.away_points) return null;
-  const homeWon = game.home_points! > game.away_points!;
-  return homeWon === (teamId === game.home_id) ? "win" : "loss";
+/**
+ * Whether a pick of `teamId` won `game`, once the game is final. Against the spread, the team's
+ * points plus its spread must beat the opponent's (a game without a line counts as a pick'em).
+ * Null for a tie or a push
+ */
+export function pickResult(
+  game: BoardGame,
+  teamId: number,
+  pickType: PickType = "outright",
+): PickResult | null {
+  if (!isFinal(game)) return null;
+  const isHome = teamId === game.home_id;
+  const [ours, theirs] = isHome
+    ? [game.home_points!, game.away_points!]
+    : [game.away_points!, game.home_points!];
+  const homeSpread = pickType === "spread" ? (game.home_spread ?? 0) : 0;
+  const margin = ours - theirs + (isHome ? homeSpread : -homeSpread);
+  if (margin === 0) return null;
+  return margin > 0 ? "win" : "loss";
 }
 
 function formatDates(games: BoardGame[]) {
@@ -84,7 +101,13 @@ function formatDates(games: BoardGame[]) {
 }
 
 export function buildBoard(board: SheetBoard, now: Date) {
+  const settings: PoolSettings = board.pool;
   const teamsById = new Map(board.teams.map((t) => [t.id, t]));
+  // Teams outside the pool's conferences can't be picked
+  const inPool = (id: number) => {
+    const team = teamsById.get(id);
+    return team !== undefined && isConferenceInPool(settings, team.conference);
+  };
   const gamesById = new Map(board.games.map((g) => [g.id, g]));
   const openWeek = getOpenWeek(board.games, now);
   const rankByWeekTeam = new Map(board.rankings.map((r) => [`${r.week}:${r.team_id}`, r.rank]));
@@ -99,8 +122,10 @@ export function buildBoard(board: SheetBoard, now: Date) {
     pickCountByWeek.set(game.week, (pickCountByWeek.get(game.week) ?? 0) + 1);
   }
 
+  // Games without a team in the pool aren't worth listing
   const gamesByWeek = new Map<number, BoardGame[]>();
   for (const game of board.games) {
+    if (!inPool(game.home_id) && !inPool(game.away_id)) continue;
     gamesByWeek.set(game.week, [...(gamesByWeek.get(game.week) ?? []), game]);
   }
 
@@ -108,7 +133,7 @@ export function buildBoard(board: SheetBoard, now: Date) {
     .sort(([a], [b]) => a - b)
     .map(([week, games]) => {
       const state = getWeekState(week, openWeek);
-      const full = (pickCountByWeek.get(week) ?? 0) >= PICKS_PER_WEEK;
+      const full = (pickCountByWeek.get(week) ?? 0) >= settings.picksPerWeek;
 
       const teamView = (game: BoardGame, side: "home" | "away", started: boolean): TeamView => {
         const id = side === "home" ? game.home_id : game.away_id;
@@ -121,7 +146,7 @@ export function buildBoard(board: SheetBoard, now: Date) {
         let pickState: TeamPickState;
         if (pickedTeamId === id) {
           pickState = started || state !== "open" ? "lockedPick" : "picked";
-        } else if (!team) {
+        } else if (!inPool(id)) {
           pickState = "unavailable";
         } else if (usedWeek !== null) {
           pickState = "used";
@@ -151,7 +176,7 @@ export function buildBoard(board: SheetBoard, now: Date) {
           state: pickState,
           usedWeek,
           points: isFinal(game) ? (side === "home" ? game.home_points : game.away_points) : null,
-          result: pickResult(game, id),
+          result: pickResult(game, id, settings.pickType),
         };
       };
 
@@ -177,7 +202,14 @@ export function buildBoard(board: SheetBoard, now: Date) {
         ];
       });
 
-      return { week, state, dates: formatDates(games), games: gameViews, picks };
+      return {
+        week,
+        state,
+        dates: formatDates(games),
+        games: gameViews,
+        picks,
+        picksPerWeek: settings.picksPerWeek,
+      };
     });
 
   return { weeks, openWeek };

@@ -1,6 +1,5 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PICKS_PER_WEEK } from "#/lib/picks";
 import { cn } from "@/lib/utils";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
@@ -61,7 +60,7 @@ export function WeekTabs({
               >
                 {week.state === "upcoming"
                   ? `Opens after week ${week.week - 1}`
-                  : `${week.picks.length}/${PICKS_PER_WEEK} picked`}
+                  : `${week.picks.length}/${week.picksPerWeek} picked`}
               </span>
             </button>
           );

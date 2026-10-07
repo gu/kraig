@@ -1,4 +1,4 @@
-import { PICKS_PER_WEEK } from "../../src/lib/picks.ts";
+import { DEFAULT_PICKS_PER_WEEK } from "../../src/lib/pool-settings.ts";
 
 export type Game = { id: number; week: number; home_id: number; away_id: number };
 export type Pick = { game_id: number; team_id: number };
@@ -14,9 +14,9 @@ function shuffle<T>(items: readonly T[], random: Random): T[] {
 }
 
 /**
- * Randomly picks a team from games in each of `weeks`, topping each week up to PICKS_PER_WEEK.
+ * Randomly picks a team from games in each of `weeks`, topping each week up to `picksPerWeek`.
  * Follows the same rules as saving a pick in the app: one pick per game, and each team only once
- * per sheet (counting `existing` picks), and only `teams` we have records for. A week ends up short
+ * per sheet (counting `existing` picks), and only `teams` the pool allows. A week ends up short
  * if it runs out of eligible games.
  */
 export function chooseRandomPicks({
@@ -24,12 +24,14 @@ export function chooseRandomPicks({
   teams,
   weeks,
   existing,
+  picksPerWeek = DEFAULT_PICKS_PER_WEEK,
   random = Math.random,
 }: {
   games: readonly Game[];
   teams: ReadonlySet<number>;
   weeks: readonly number[];
   existing: readonly Pick[];
+  picksPerWeek?: number;
   random?: Random;
 }): Pick[] {
   const weekByGame = new Map(games.map((g) => [g.id, g.week]));
@@ -44,7 +46,7 @@ export function chooseRandomPicks({
       games.filter((g) => g.week === week),
       random,
     )) {
-      if (count >= PICKS_PER_WEEK) break;
+      if (count >= picksPerWeek) break;
       if (pickedGames.has(game.id)) continue;
 
       const team = shuffle([game.home_id, game.away_id], random).find(

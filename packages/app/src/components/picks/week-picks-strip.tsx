@@ -7,7 +7,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { PICKS_PER_WEEK } from "#/lib/picks";
 import { cn } from "@/lib/utils";
 import { CrosshairIcon, LockIcon, XIcon } from "lucide-react";
 import { useRef } from "react";
@@ -22,17 +21,17 @@ function summary(week: WeekView) {
     return (
       <>
         <strong className="font-semibold text-foreground">
-          {made} of {PICKS_PER_WEEK}
+          {made} of {week.picksPerWeek}
         </strong>{" "}
         made
       </>
     );
   }
-  const left = Math.max(PICKS_PER_WEEK - made, 0);
+  const left = Math.max(week.picksPerWeek - made, 0);
   return (
     <>
       <strong className="font-semibold text-foreground">
-        {made} of {PICKS_PER_WEEK}
+        {made} of {week.picksPerWeek}
       </strong>{" "}
       made{left > 0 && ` · ${left} left`}
     </>
@@ -136,7 +135,7 @@ export function WeekPicksStrip({
   onShowGame: (pick: PickView) => void;
   className?: string;
 }) {
-  const emptySlots = Math.max(PICKS_PER_WEEK - week.picks.length, 0);
+  const emptySlots = Math.max(week.picksPerWeek - week.picks.length, 0);
   const emptyLabel = week.state === "open" ? "Open" : "Empty";
 
   return (

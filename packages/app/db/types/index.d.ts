@@ -82,11 +82,15 @@ export interface ExtTeam {
 }
 
 export interface Pool {
+  conferences: string[] | null;
   created_at: Generated<Timestamp>;
   display_id: Generated<string>;
   id: Generated<number>;
+  max_sheets: Generated<number>;
   name: string;
   owner_id: string;
+  pick_type: Generated<string>;
+  picks_per_week: Generated<number>;
   updated_at: Generated<Timestamp>;
 }
 

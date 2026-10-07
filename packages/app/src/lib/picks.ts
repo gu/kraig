@@ -1,5 +1,3 @@
-export const PICKS_PER_WEEK = 5;
-
 export type WeekState = "complete" | "open" | "upcoming";
 
 /**

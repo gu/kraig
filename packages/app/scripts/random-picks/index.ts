@@ -4,6 +4,7 @@ import { Pool } from "pg";
 import type { DB } from "@db/types";
 import config from "../../config.ts";
 import { getOpenWeek } from "../../src/lib/picks.ts";
+import { isConferenceInPool, toPoolSettings } from "../../src/lib/pool-settings.ts";
 import { chooseRandomPicks } from "./choose.ts";
 
 const Usage = `Usage: node scripts/random-picks/index.ts --sheet <id> --pool <id> [options]
@@ -71,7 +72,7 @@ try {
   const poolId = idColumn(poolArg);
   const pool = await db
     .selectFrom("pool")
-    .select(["id", "name"])
+    .select(["id", "name", "conferences", "max_sheets", "picks_per_week", "pick_type"])
     .where(poolId.column, "=", poolId.value)
     .executeTakeFirst();
   if (!pool) fail(`Pool not found: ${poolArg}`);
@@ -118,14 +119,20 @@ try {
     : [];
   const existing = allPicks.filter((p) => !resetPicks.includes(p));
 
-  // Like the app, only teams we have records for can be picked (excludes e.g. FCS opponents)
-  const schools = new Map(
-    (await db.selectFrom("ext_team").select(["id", "school"]).execute()).map((t) => [
-      t.id,
-      t.school,
-    ]),
-  );
-  const picks = chooseRandomPicks({ games, teams: new Set(schools.keys()), weeks, existing });
+  // Like the app, only teams we have records for (excludes e.g. FCS opponents) in the pool's
+  // conferences can be picked
+  const settings = toPoolSettings(pool);
+  const teams = await db.selectFrom("ext_team").select(["id", "school", "conference"]).execute();
+  const schools = new Map(teams.map((t) => [t.id, t.school]));
+  const picks = chooseRandomPicks({
+    games,
+    teams: new Set(
+      teams.filter((t) => isConferenceInPool(settings, t.conference)).map((t) => t.id),
+    ),
+    weeks,
+    existing,
+    picksPerWeek: settings.picksPerWeek,
+  });
 
   console.table(
     picks.map((p) => ({

@@ -1,8 +1,19 @@
 import { Button } from "#/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "#/components/ui/card";
+import { RulesCard } from "#/components/rules-card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "#/components/ui/card";
 import { Item, ItemContent, ItemGroup, ItemMedia, ItemTitle } from "#/components/ui/item";
+import { Skeleton } from "#/components/ui/skeleton";
 import { toast } from "#/components/ui/toast";
+import { usePool } from "#/hooks/use-pools";
 import { useSheets } from "#/hooks/use-sheets";
+import { cn } from "@/lib/utils";
 import { queryClient } from "#/lib/query-client";
 import { authMiddleware } from "#/middleware/auth";
 import db from "@db/client";
@@ -22,123 +33,145 @@ const createEmptySheet = createServerFn({ method: "POST" })
     const userId = context.user.id;
     const pooldisplayId = data.poolDisplayId;
 
-    const pool = await db
-      .selectFrom("pool")
-      .select(["id"])
-      .where("owner_id", "=", userId)
-      .where("display_id", "=", pooldisplayId)
-      .executeTakeFirstOrThrow();
+    return db.transaction().execute(async (trx) => {
+      const pool = await trx
+        .selectFrom("pool")
+        .select(["id", "max_sheets"])
+        .where("owner_id", "=", userId)
+        .where("display_id", "=", pooldisplayId)
+        // Serialize sheet creation per pool so concurrent requests can't pass the limit
+        .forUpdate()
+        .executeTakeFirstOrThrow();
 
-    return db
-      .insertInto("sheet")
-      .values({
-        name: "New Sheet",
-        owner_id: userId,
-        pool_id: pool.id,
-      })
-      .returning(["id", "display_id", "name", "owner_id"])
-      .executeTakeFirstOrThrow();
+      const { count } = await trx
+        .selectFrom("sheet")
+        .select((eb) => eb.fn.countAll<string>().as("count"))
+        .where("pool_id", "=", pool.id)
+        .where("owner_id", "=", userId)
+        .executeTakeFirstOrThrow();
+      if (Number(count) >= pool.max_sheets) {
+        throw new Error(`This pool allows ${pool.max_sheets} sheets per member`);
+      }
+
+      return trx
+        .insertInto("sheet")
+        .values({
+          name: "New Sheet",
+          owner_id: userId,
+          pool_id: pool.id,
+        })
+        .returning(["id", "display_id", "name", "owner_id"])
+        .executeTakeFirstOrThrow();
+    });
   });
 
 function PoolDashboard() {
   const { poolDisplayId } = Route.useParams();
   const navigate = useNavigate();
 
+  const { data: pool } = usePool(poolDisplayId);
   const { data: sheets } = useSheets({ poolDisplayId });
 
+  const maxSheets = pool?.settings.maxSheets;
+  const sheetCount = sheets?.length ?? 0;
+  const atLimit = maxSheets !== undefined && sheetCount >= maxSheets;
+
   const createHandler = async () => {
-    const newSheet = await createEmptySheet({ data: { poolDisplayId } });
-    toast.add({
-      type: "success",
-      title: "Successfully created new sheet",
-    });
-    navigate({
-      to: "/pool/$poolDisplayId/sheet/$sheetDisplayId",
-      params: { poolDisplayId, sheetDisplayId: newSheet.display_id },
-    });
+    try {
+      const newSheet = await createEmptySheet({ data: { poolDisplayId } });
+      toast.add({
+        type: "success",
+        title: "Successfully created new sheet",
+      });
+      navigate({
+        to: "/pool/$poolDisplayId/sheet/$sheetDisplayId",
+        params: { poolDisplayId, sheetDisplayId: newSheet.display_id },
+      });
+    } catch (e) {
+      toast.add({
+        type: "error",
+        title: "Couldn't create sheet",
+        description: e instanceof Error ? e.message : undefined,
+      });
+    }
     queryClient.invalidateQueries({ queryKey: ["sheets"] });
   };
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="md:col-span-2 p-4">
-          <section className="py-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Rules</CardTitle>
-              </CardHeader>
-              <CardContent className="px-10">
-                <ul className="list-disc gap-1 flex flex-col text-xs">
-                  <li>Picks lock at the start of that teams game</li>
-                  <li>
-                    You can only select a team once. After they are chosen, you will not be allowed
-                    to select them for the rest of the year.
-                  </li>
-                  <li>You will only be able to make picks for the upcoming week</li>
-                  <li>You will have 3 lives. Every wrong pick will eliminate a life</li>
-                  <li>Once all 3 of your lives are gone, you will be eliminated</li>
-                </ul>
-              </CardContent>
-            </Card>
-          </section>
-        </div>
+      <div className="flex flex-col gap-4 p-4">
+        <h1 className="text-2xl font-bold">{pool?.name}</h1>
 
-        <div className="px-4">
-          <section className="py-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Your Sheets</CardTitle>
-              </CardHeader>
-              <CardContent className="px-2">
-                <ItemGroup>
-                  {(sheets ?? []).map((sheet) => {
-                    return (
-                      <Item
-                        key={sheet.id}
-                        variant="muted"
-                        render={
-                          <Link
-                            to="/pool/$poolDisplayId/sheet/$sheetDisplayId"
-                            params={{ poolDisplayId, sheetDisplayId: sheet.display_id }}
-                          />
-                        }
-                      >
-                        <ItemMedia variant="icon">
-                          <FileSpreadsheet />
-                        </ItemMedia>
-                        <ItemContent>
-                          <ItemTitle>{sheet.name}</ItemTitle>
-                        </ItemContent>
-                        <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" />
-                      </Item>
-                    );
-                  })}
-                </ItemGroup>
-              </CardContent>
+        <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Sheets</CardTitle>
+              {maxSheets !== undefined && (
+                <CardAction className="text-sm text-muted-foreground tabular-nums">
+                  {sheetCount} of {maxSheets}
+                </CardAction>
+              )}
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3 px-2">
+              {maxSheets !== undefined && (
+                <div className="flex gap-1 px-2" aria-hidden="true">
+                  {Array.from({ length: maxSheets }, (_, i) => (
+                    <span
+                      key={i}
+                      className={cn(
+                        "h-1.5 flex-1 rounded-full",
+                        i < sheetCount ? "bg-primary" : "bg-muted",
+                      )}
+                    />
+                  ))}
+                </div>
+              )}
+              <ItemGroup>
+                {(sheets ?? []).map((sheet) => {
+                  return (
+                    <Item
+                      key={sheet.id}
+                      variant="muted"
+                      render={
+                        <Link
+                          to="/pool/$poolDisplayId/sheet/$sheetDisplayId"
+                          params={{ poolDisplayId, sheetDisplayId: sheet.display_id }}
+                        />
+                      }
+                    >
+                      <ItemMedia variant="icon">
+                        <FileSpreadsheet />
+                      </ItemMedia>
+                      <ItemContent>
+                        <ItemTitle>{sheet.name}</ItemTitle>
+                      </ItemContent>
+                      <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" />
+                    </Item>
+                  );
+                })}
+              </ItemGroup>
+              {atLimit && (
+                <p className="mx-2 rounded-lg bg-muted px-3 py-2.5 text-sm text-muted-foreground">
+                  You've entered the most sheets this pool allows ({maxSheets}).
+                </p>
+              )}
+            </CardContent>
+            {!atLimit && (
               <CardFooter>
-                <Button className="w-full" variant="default" size="sm" onClick={createHandler}>
+                <Button
+                  className="w-full"
+                  variant="default"
+                  size="sm"
+                  disabled={maxSheets === undefined}
+                  onClick={createHandler}
+                >
                   Create Sheet
                 </Button>
               </CardFooter>
-            </Card>
-          </section>
-        </div>
+            )}
+          </Card>
 
-        <div className="px-4">
-          <section className="py-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Top 10</CardTitle>
-              </CardHeader>
-              <CardContent className="px-10"></CardContent>
-              <CardFooter>
-                <Button className="w-full" variant="default" size="sm" onClick={createHandler}>
-                  View Leaderboard
-                </Button>
-              </CardFooter>
-            </Card>
-          </section>
+          {pool ? <RulesCard settings={pool.settings} /> : <Skeleton className="h-80 w-full" />}
         </div>
       </div>
 

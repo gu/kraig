@@ -1,4 +1,5 @@
-import { getOpenWeek, PICKS_PER_WEEK } from "#/lib/picks";
+import { getOpenWeek } from "#/lib/picks";
+import { isConferenceInPool, toPoolSettings } from "#/lib/pool-settings";
 import { queryClient } from "#/lib/query-client";
 import { authMiddleware } from "#/middleware/auth";
 import db from "@db/client";
@@ -9,22 +10,30 @@ import z from "zod";
 // Sportsbooks to take the spread from, in order of preference
 const PREFERRED_PROVIDERS = ["DraftKings", "ESPN Bet", "Bovada"];
 
-async function getOwnedSheetId(userId: string, sheetDisplayId: string) {
+/** The user's sheet, with the settings of the pool it's in */
+async function getOwnedSheet(userId: string, sheetDisplayId: string) {
   const sheet = await db
     .selectFrom("sheet")
-    .select("id")
-    .where("owner_id", "=", userId)
-    .where("display_id", "=", sheetDisplayId)
+    .innerJoin("pool", "pool.id", "sheet.pool_id")
+    .select([
+      "sheet.id",
+      "pool.conferences",
+      "pool.max_sheets",
+      "pool.picks_per_week",
+      "pool.pick_type",
+    ])
+    .where("sheet.owner_id", "=", userId)
+    .where("sheet.display_id", "=", sheetDisplayId)
     .executeTakeFirstOrThrow();
 
-  return sheet.id;
+  return { id: sheet.id, settings: toPoolSettings(sheet) };
 }
 
 const getSheetBoard = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .validator(z.object({ sheetDisplayId: z.string() }))
   .handler(async ({ context, data }) => {
-    const sheetId = await getOwnedSheetId(context.user.id, data.sheetDisplayId);
+    const sheet = await getOwnedSheet(context.user.id, data.sheetDisplayId);
 
     const [games, teams, lines, rankings, picks] = await Promise.all([
       db
@@ -44,14 +53,17 @@ const getSheetBoard = createServerFn({ method: "GET" })
         .orderBy("start_date")
         .orderBy("id")
         .execute(),
-      db.selectFrom("ext_team").select(["id", "school", "abbreviation", "logo_url"]).execute(),
+      db
+        .selectFrom("ext_team")
+        .select(["id", "school", "abbreviation", "logo_url", "conference"])
+        .execute(),
       db.selectFrom("ext_line").select(["game_id", "provider", "spread", "over_under"]).execute(),
       // AP Top 25. A week's poll is the ranking teams carry into that week's games
       db.selectFrom("ext_ranking").select(["week", "team_id", "rank"]).execute(),
       db
         .selectFrom("sheet_pick")
         .select(["game_id", "team_id"])
-        .where("sheet_id", "=", sheetId)
+        .where("sheet_id", "=", sheet.id)
         .execute(),
     ]);
 
@@ -81,6 +93,7 @@ const getSheetBoard = createServerFn({ method: "GET" })
       teams,
       rankings,
       picks,
+      pool: sheet.settings,
     };
   });
 
@@ -88,7 +101,7 @@ const savePick = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator(z.object({ sheetDisplayId: z.string(), gameId: z.number(), teamId: z.number() }))
   .handler(async ({ context, data }) => {
-    const sheetId = await getOwnedSheetId(context.user.id, data.sheetDisplayId);
+    const { id: sheetId, settings } = await getOwnedSheet(context.user.id, data.sheetDisplayId);
     const now = new Date();
 
     await db.transaction().execute(async (trx) => {
@@ -113,11 +126,14 @@ const savePick = createServerFn({ method: "POST" })
             ]),
           ),
         )
-        .select("ext_team.id")
+        .select(["ext_team.id", "ext_team.conference"])
         .where("ext_game.id", "=", data.gameId)
         .where("ext_team.id", "=", data.teamId)
         .executeTakeFirst();
       if (!team) throw new Error("That team can't be picked for this game");
+      if (!isConferenceInPool(settings, team.conference)) {
+        throw new Error("That team's conference isn't in this pool");
+      }
 
       const usedElsewhere = await trx
         .selectFrom("sheet_pick")
@@ -152,8 +168,8 @@ const savePick = createServerFn({ method: "POST" })
         .where("sheet_pick.sheet_id", "=", sheetId)
         .where("ext_game.week", "=", game.week)
         .executeTakeFirstOrThrow();
-      if (Number(count) >= PICKS_PER_WEEK) {
-        throw new Error(`You can only make ${PICKS_PER_WEEK} picks per week`);
+      if (Number(count) >= settings.picksPerWeek) {
+        throw new Error(`You can only make ${settings.picksPerWeek} picks per week`);
       }
 
       await trx
@@ -167,7 +183,7 @@ const removePick = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator(z.object({ sheetDisplayId: z.string(), gameId: z.number() }))
   .handler(async ({ context, data }) => {
-    const sheetId = await getOwnedSheetId(context.user.id, data.sheetDisplayId);
+    const { id: sheetId } = await getOwnedSheet(context.user.id, data.sheetDisplayId);
 
     const game = await db
       .selectFrom("ext_game")
