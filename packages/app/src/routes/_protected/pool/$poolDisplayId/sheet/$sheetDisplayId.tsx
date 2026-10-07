@@ -13,7 +13,7 @@ import { UsedTeamsCard } from "#/components/picks/used-teams-card";
 import { WeekPicksCard } from "#/components/picks/week-picks-card";
 import { WeekPicksStrip } from "#/components/picks/week-picks-strip";
 import { WeekTabs } from "#/components/picks/week-tabs";
-import { Card, CardDescription, CardHeader, CardTitle } from "#/components/ui/card";
+import { Card, CardHeader, CardTitle } from "#/components/ui/card";
 import { Button } from "#/components/ui/button";
 import {
   Empty,
@@ -133,16 +133,11 @@ function Sheet() {
     <div className="@container/sheet flex flex-col gap-4 p-4">
       <Card>
         <CardHeader className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
-          <div className="flex min-w-0 flex-col gap-1">
-            <div className="flex min-w-0 items-center gap-1">
-              <CardTitle className="truncate text-lg">{sheet?.name}</CardTitle>
-              {sheet && (
-                <EditSheetNameDialog sheetDisplayId={sheetDisplayId} currentName={sheet.name} />
-              )}
-            </div>
-            <CardDescription>
-              {selectedWeek ? `Week ${selectedWeek.week} · ${selectedWeek.dates}` : " "}
-            </CardDescription>
+          <div className="flex min-w-0 items-center gap-1">
+            <CardTitle className="truncate text-lg">{sheet?.name}</CardTitle>
+            {sheet && (
+              <EditSheetNameDialog sheetDisplayId={sheetDisplayId} currentName={sheet.name} />
+            )}
           </div>
           {weeks.length > 0 && <SheetStats weeks={weeks} />}
         </CardHeader>
