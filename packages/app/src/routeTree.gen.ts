@@ -13,9 +13,9 @@ import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ProtectedIndexRouteImport } from './routes/_protected/index'
-import { Route as ProtectedPoolPoolDisplayIdRouteImport } from './routes/_protected/pool/$poolDisplayId'
-import { Route as ProtectedSheetSheetDisplayIdRouteImport } from './routes/_protected/sheet/$sheetDisplayId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ProtectedPoolPoolDisplayIdIndexRouteImport } from './routes/_protected/pool/$poolDisplayId/index'
+import { Route as ProtectedPoolPoolDisplayIdSheetSheetDisplayIdRouteImport } from './routes/_protected/pool/$poolDisplayId/sheet/$sheetDisplayId'
 
 const ProtectedRoute = ProtectedRouteImport.update({
   id: '/_protected',
@@ -36,39 +36,39 @@ const ProtectedIndexRoute = ProtectedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ProtectedRoute,
 } as any)
-const ProtectedPoolPoolDisplayIdRoute =
-  ProtectedPoolPoolDisplayIdRouteImport.update({
-    id: '/pool/$poolDisplayId',
-    path: '/pool/$poolDisplayId',
-    getParentRoute: () => ProtectedRoute,
-  } as any)
-const ProtectedSheetSheetDisplayIdRoute =
-  ProtectedSheetSheetDisplayIdRouteImport.update({
-    id: '/sheet/$sheetDisplayId',
-    path: '/sheet/$sheetDisplayId',
-    getParentRoute: () => ProtectedRoute,
-  } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProtectedPoolPoolDisplayIdIndexRoute =
+  ProtectedPoolPoolDisplayIdIndexRouteImport.update({
+    id: '/pool/$poolDisplayId/',
+    path: '/pool/$poolDisplayId/',
+    getParentRoute: () => ProtectedRoute,
+  } as any)
+const ProtectedPoolPoolDisplayIdSheetSheetDisplayIdRoute =
+  ProtectedPoolPoolDisplayIdSheetSheetDisplayIdRouteImport.update({
+    id: '/pool/$poolDisplayId/sheet/$sheetDisplayId',
+    path: '/pool/$poolDisplayId/sheet/$sheetDisplayId',
+    getParentRoute: () => ProtectedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof ProtectedIndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
-  '/pool/$poolDisplayId': typeof ProtectedPoolPoolDisplayIdRoute
-  '/sheet/$sheetDisplayId': typeof ProtectedSheetSheetDisplayIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/pool/$poolDisplayId/': typeof ProtectedPoolPoolDisplayIdIndexRoute
+  '/pool/$poolDisplayId/sheet/$sheetDisplayId': typeof ProtectedPoolPoolDisplayIdSheetSheetDisplayIdRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/': typeof ProtectedIndexRoute
-  '/pool/$poolDisplayId': typeof ProtectedPoolPoolDisplayIdRoute
-  '/sheet/$sheetDisplayId': typeof ProtectedSheetSheetDisplayIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/pool/$poolDisplayId': typeof ProtectedPoolPoolDisplayIdIndexRoute
+  '/pool/$poolDisplayId/sheet/$sheetDisplayId': typeof ProtectedPoolPoolDisplayIdSheetSheetDisplayIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -76,9 +76,9 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/_protected/': typeof ProtectedIndexRoute
-  '/_protected/pool/$poolDisplayId': typeof ProtectedPoolPoolDisplayIdRoute
-  '/_protected/sheet/$sheetDisplayId': typeof ProtectedSheetSheetDisplayIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/_protected/pool/$poolDisplayId/': typeof ProtectedPoolPoolDisplayIdIndexRoute
+  '/_protected/pool/$poolDisplayId/sheet/$sheetDisplayId': typeof ProtectedPoolPoolDisplayIdSheetSheetDisplayIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -86,26 +86,26 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/signup'
-    | '/pool/$poolDisplayId'
-    | '/sheet/$sheetDisplayId'
     | '/api/auth/$'
+    | '/pool/$poolDisplayId/'
+    | '/pool/$poolDisplayId/sheet/$sheetDisplayId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
     | '/signup'
     | '/'
-    | '/pool/$poolDisplayId'
-    | '/sheet/$sheetDisplayId'
     | '/api/auth/$'
+    | '/pool/$poolDisplayId'
+    | '/pool/$poolDisplayId/sheet/$sheetDisplayId'
   id:
     | '__root__'
     | '/_protected'
     | '/login'
     | '/signup'
     | '/_protected/'
-    | '/_protected/pool/$poolDisplayId'
-    | '/_protected/sheet/$sheetDisplayId'
     | '/api/auth/$'
+    | '/_protected/pool/$poolDisplayId/'
+    | '/_protected/pool/$poolDisplayId/sheet/$sheetDisplayId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -145,20 +145,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedIndexRouteImport
       parentRoute: typeof ProtectedRoute
     }
-    '/_protected/pool/$poolDisplayId': {
-      id: '/_protected/pool/$poolDisplayId'
-      path: '/pool/$poolDisplayId'
-      fullPath: '/pool/$poolDisplayId'
-      preLoaderRoute: typeof ProtectedPoolPoolDisplayIdRouteImport
-      parentRoute: typeof ProtectedRoute
-    }
-    '/_protected/sheet/$sheetDisplayId': {
-      id: '/_protected/sheet/$sheetDisplayId'
-      path: '/sheet/$sheetDisplayId'
-      fullPath: '/sheet/$sheetDisplayId'
-      preLoaderRoute: typeof ProtectedSheetSheetDisplayIdRouteImport
-      parentRoute: typeof ProtectedRoute
-    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -166,19 +152,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_protected/pool/$poolDisplayId/': {
+      id: '/_protected/pool/$poolDisplayId/'
+      path: '/pool/$poolDisplayId'
+      fullPath: '/pool/$poolDisplayId/'
+      preLoaderRoute: typeof ProtectedPoolPoolDisplayIdIndexRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
+    '/_protected/pool/$poolDisplayId/sheet/$sheetDisplayId': {
+      id: '/_protected/pool/$poolDisplayId/sheet/$sheetDisplayId'
+      path: '/pool/$poolDisplayId/sheet/$sheetDisplayId'
+      fullPath: '/pool/$poolDisplayId/sheet/$sheetDisplayId'
+      preLoaderRoute: typeof ProtectedPoolPoolDisplayIdSheetSheetDisplayIdRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
   }
 }
 
 interface ProtectedRouteChildren {
   ProtectedIndexRoute: typeof ProtectedIndexRoute
-  ProtectedPoolPoolDisplayIdRoute: typeof ProtectedPoolPoolDisplayIdRoute
-  ProtectedSheetSheetDisplayIdRoute: typeof ProtectedSheetSheetDisplayIdRoute
+  ProtectedPoolPoolDisplayIdIndexRoute: typeof ProtectedPoolPoolDisplayIdIndexRoute
+  ProtectedPoolPoolDisplayIdSheetSheetDisplayIdRoute: typeof ProtectedPoolPoolDisplayIdSheetSheetDisplayIdRoute
 }
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedIndexRoute: ProtectedIndexRoute,
-  ProtectedPoolPoolDisplayIdRoute: ProtectedPoolPoolDisplayIdRoute,
-  ProtectedSheetSheetDisplayIdRoute: ProtectedSheetSheetDisplayIdRoute,
+  ProtectedPoolPoolDisplayIdIndexRoute: ProtectedPoolPoolDisplayIdIndexRoute,
+  ProtectedPoolPoolDisplayIdSheetSheetDisplayIdRoute:
+    ProtectedPoolPoolDisplayIdSheetSheetDisplayIdRoute,
 }
 
 const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(

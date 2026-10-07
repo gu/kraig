@@ -1,4 +1,4 @@
-import { useCurrentPoolId } from "#/hooks/use-current-pool-id";
+import { useCurrentPoolDisplayId } from "#/hooks/use-current-pool-display-id";
 import { useSheets } from "#/hooks/use-sheets";
 import {
   SidebarGroup,
@@ -12,10 +12,10 @@ import { FileSpreadsheet } from "lucide-react";
 
 export function NavSheets() {
   const navigate = useNavigate();
-  const { currentPoolId } = useCurrentPoolId();
-  const { data: userSheets } = useSheets({ poolId: currentPoolId?.id });
+  const poolDisplayId = useCurrentPoolDisplayId();
+  const { data: userSheets } = useSheets({ poolDisplayId });
 
-  if (!currentPoolId) {
+  if (!poolDisplayId) {
     return;
   }
 
@@ -28,8 +28,8 @@ export function NavSheets() {
             <SidebarMenuButton
               onClick={() =>
                 navigate({
-                  to: "/sheet/$sheetDisplayId",
-                  params: { sheetDisplayId: sheet.display_id },
+                  to: "/pool/$poolDisplayId/sheet/$sheetDisplayId",
+                  params: { poolDisplayId, sheetDisplayId: sheet.display_id },
                 })
               }
             >

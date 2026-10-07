@@ -19,7 +19,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { authMiddleware } from "#/middleware/auth";
 import db from "@db/client";
 import { useQuery } from "@tanstack/react-query";
-import { useCurrentPoolId } from "#/hooks/use-current-pool-id";
+import { useCurrentPoolDisplayId } from "#/hooks/use-current-pool-display-id";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { queryClient } from "#/lib/query-client";
 
@@ -40,7 +40,7 @@ const getUserPools = createServerFn({ method: "GET" })
 export function PoolSwitcher() {
   const router = useRouter();
   const navigate = useNavigate();
-  const { currentPoolId, setCurrentPoolId } = useCurrentPoolId();
+  const currentPoolDisplayId = useCurrentPoolDisplayId();
 
   const { data: userPools } = useQuery({
     queryKey: ["pools", "user"],
@@ -53,8 +53,7 @@ export function PoolSwitcher() {
     return null;
   }
 
-  const activePool =
-    userPools.find((p) => p.display_id === currentPoolId?.displayId) ?? userPools[0];
+  const activePool = userPools.find((p) => p.display_id === currentPoolDisplayId) ?? userPools[0];
 
   return (
     <SidebarMenu>
@@ -92,7 +91,6 @@ export function PoolSwitcher() {
                     <DropdownMenuItem
                       key={pool.display_id}
                       onClick={() => {
-                        setCurrentPoolId({ id: pool.id, displayId: pool.display_id });
                         navigate({
                           to: "/pool/$poolDisplayId",
                           params: { poolDisplayId: pool.display_id },

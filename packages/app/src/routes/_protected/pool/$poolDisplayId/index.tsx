@@ -11,7 +11,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { ChevronRightIcon, FileSpreadsheet } from "lucide-react";
 import z from "zod";
 
-export const Route = createFileRoute("/_protected/pool/$poolDisplayId")({
+export const Route = createFileRoute("/_protected/pool/$poolDisplayId/")({
   component: PoolDashboard,
 });
 
@@ -52,7 +52,10 @@ function PoolDashboard() {
       type: "success",
       title: "Successfully created new sheet",
     });
-    navigate({ to: "/sheet/$sheetDisplayId", params: { sheetDisplayId: newSheet.display_id } });
+    navigate({
+      to: "/pool/$poolDisplayId/sheet/$sheetDisplayId",
+      params: { poolDisplayId, sheetDisplayId: newSheet.display_id },
+    });
     queryClient.invalidateQueries({ queryKey: ["sheets"] });
   };
 
@@ -96,8 +99,8 @@ function PoolDashboard() {
                         variant="muted"
                         render={
                           <Link
-                            to="/sheet/$sheetDisplayId"
-                            params={{ sheetDisplayId: sheet.display_id }}
+                            to="/pool/$poolDisplayId/sheet/$sheetDisplayId"
+                            params={{ poolDisplayId, sheetDisplayId: sheet.display_id }}
                           />
                         }
                       >
@@ -177,8 +180,8 @@ function PoolDashboard() {
                               className="w-full"
                               onClick={() => {
                                 navigate({
-                                  to: "/sheet/$sheetDisplayId",
-                                  params: { sheetDisplayId: sheet.display_id },
+                                  to: "/pool/$poolDisplayId/sheet/$sheetDisplayId",
+                                  params: { poolDisplayId, sheetDisplayId: sheet.display_id },
                                 });
                               }}
                             >

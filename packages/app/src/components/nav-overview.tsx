@@ -1,4 +1,4 @@
-import { useCurrentPoolId } from "#/hooks/use-current-pool-id";
+import { useCurrentPoolDisplayId } from "#/hooks/use-current-pool-display-id";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -11,9 +11,9 @@ import { House, Podium } from "lucide-react";
 
 export function NavOverview() {
   const navigate = useNavigate();
-  const { currentPoolId } = useCurrentPoolId();
+  const poolDisplayId = useCurrentPoolDisplayId();
 
-  if (!currentPoolId) {
+  if (!poolDisplayId) {
     return;
   }
 
@@ -26,7 +26,7 @@ export function NavOverview() {
             onClick={() =>
               navigate({
                 to: "/pool/$poolDisplayId",
-                params: { poolDisplayId: currentPoolId.displayId },
+                params: { poolDisplayId },
               })
             }
           >

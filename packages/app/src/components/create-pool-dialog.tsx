@@ -20,6 +20,7 @@ import { useState } from "react";
 import { CirclePlus } from "lucide-react";
 import { SidebarGroup, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "./ui/sidebar";
 import { queryClient } from "#/lib/query-client";
+import { useNavigate } from "@tanstack/react-router";
 
 const createPool = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
@@ -34,7 +35,7 @@ const createPool = createServerFn({ method: "POST" })
         name: poolName,
         owner_id: userId,
       })
-      .returning(["id", "name", "owner_id"])
+      .returning(["id", "display_id", "name", "owner_id"])
       .executeTakeFirstOrThrow();
 
     return newPool;
@@ -43,6 +44,7 @@ const createPool = createServerFn({ method: "POST" })
 export function CreatePoolDialog() {
   const [submitting, setIsSubmitting] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
   const form = useForm({
     defaultValues: {
@@ -52,8 +54,12 @@ export function CreatePoolDialog() {
       setIsSubmitting(true);
       console.log(value);
       try {
-        await createPool({ data: { ...value } });
+        const newPool = await createPool({ data: { ...value } });
         await queryClient.invalidateQueries({ queryKey: ["pools"] });
+        navigate({
+          to: "/pool/$poolDisplayId",
+          params: { poolDisplayId: newPool.display_id },
+        });
         toast.add({
           type: "success",
           title: "Successfully created new pool",
