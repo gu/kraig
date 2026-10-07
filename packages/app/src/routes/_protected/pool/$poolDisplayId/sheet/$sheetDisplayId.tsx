@@ -1,11 +1,24 @@
 import { EditSheetNameDialog } from "#/components/edit-sheet-name-dialog";
 import { buildBoard, type GameView, type PickView, type TeamView } from "#/components/picks/board";
-import { GameCard, isGamePickable } from "#/components/picks/game-card";
+import { GameCard } from "#/components/picks/game-card";
+import {
+  ActiveGameFilters,
+  GameFiltersMenu,
+  matchesGameFilters,
+  type GameFilter,
+} from "#/components/picks/game-filters";
 import { UsedTeamsCard } from "#/components/picks/used-teams-card";
 import { WeekPicksCard } from "#/components/picks/week-picks-card";
 import { WeekTabs } from "#/components/picks/week-tabs";
 import { Card, CardDescription, CardHeader, CardTitle } from "#/components/ui/card";
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "#/components/ui/empty";
+import { Button } from "#/components/ui/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "#/components/ui/empty";
 import { Input } from "#/components/ui/input";
 import { Skeleton } from "#/components/ui/skeleton";
 import { toast } from "#/components/ui/toast";
@@ -42,7 +55,7 @@ function Sheet() {
   const busy = savePick.isPending || removePick.isPending;
 
   const [query, setQuery] = useState("");
-  const [hideUnavailable, setHideUnavailable] = useState(false);
+  const [filters, setFilters] = useState<GameFilter[]>([]);
 
   const weeks = board?.weeks ?? [];
   const selectedWeek =
@@ -83,14 +96,15 @@ function Sheet() {
       ) {
         continue;
       }
-      if (hideUnavailable && !isGamePickable(game)) continue;
+      if (!matchesGameFilters(game, filters)) continue;
       const label = format(new Date(game.game.start_date), "EEEE, MMM d");
       groups.set(label, [...(groups.get(label) ?? []), game]);
     }
     return [...groups.entries()];
-  }, [selectedWeek, query, hideUnavailable]);
+  }, [selectedWeek, query, filters]);
 
   const pickCount = selectedWeek?.picks.length ?? 0;
+  const shownGameCount = days.reduce((count, [, games]) => count + games.length, 0);
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -184,16 +198,15 @@ function Sheet() {
                     className="pl-9"
                   />
                 </div>
-                <label className="flex min-h-9 cursor-pointer items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={hideUnavailable}
-                    onChange={(event) => setHideUnavailable(event.target.checked)}
-                    className="size-4 accent-primary"
-                  />
-                  Hide games with nothing to pick
-                </label>
+                <GameFiltersMenu filters={filters} onChange={setFilters} />
               </div>
+
+              <ActiveGameFilters
+                filters={filters}
+                onChange={setFilters}
+                shown={shownGameCount}
+                total={selectedWeek.games.length}
+              />
 
               {days.map(([label, games]) => (
                 <section key={label} className="flex flex-col gap-2">
@@ -211,6 +224,13 @@ function Sheet() {
                   <EmptyHeader>
                     <EmptyDescription>No games match your filters this week.</EmptyDescription>
                   </EmptyHeader>
+                  {filters.length > 0 && (
+                    <EmptyContent>
+                      <Button variant="outline" size="sm" onClick={() => setFilters([])}>
+                        Clear filters
+                      </Button>
+                    </EmptyContent>
+                  )}
                 </Empty>
               )}
             </div>
