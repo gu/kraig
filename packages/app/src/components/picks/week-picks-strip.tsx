@@ -13,7 +13,7 @@ import { CrosshairIcon, LockIcon, XIcon } from "lucide-react";
 import { useRef } from "react";
 import { rankedName, type PickView, type WeekView } from "./board";
 import { TeamLogo } from "./team-logo";
-import { pickDetail } from "./week-picks-card";
+import { pickDetail, pickTone } from "./week-picks-card";
 
 function summary(week: WeekView) {
   const made = week.picks.length;
@@ -53,6 +53,7 @@ function PickSlot({
   onShowGame: (pick: PickView) => void;
 }) {
   const detail = pickDetail(pick);
+  const tone = pickTone(pick, removable);
   // Showing the game moves focus there, so don't send it back to this slot (which would scroll
   // back up on browsers without `preventScroll`)
   const showingGame = useRef(false);
@@ -69,8 +70,9 @@ function PickSlot({
       >
         <span
           className={cn(
-            "relative flex size-12 items-center justify-center rounded-full bg-primary/10 ring-2",
-            removable ? "ring-primary" : "ring-primary/40",
+            "relative flex size-12 items-center justify-center rounded-full ring-2",
+            pick.result === null ? "bg-primary/10" : tone.bg,
+            tone.ring,
           )}
         >
           <TeamLogo team={pick.team.team} name={pick.team.name} className="size-8" />

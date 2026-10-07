@@ -31,9 +31,13 @@ export interface GameView {
   home: TeamView;
 }
 
+export type PickResult = "win" | "loss";
+
 export interface PickView {
   game: GameView;
   team: TeamView;
+  /** Null until the game is final */
+  result: PickResult | null;
 }
 
 export interface WeekView {
@@ -53,6 +57,14 @@ export function formatSpread(spread: number | null) {
   if (spread === null) return null;
   if (spread === 0) return "PK";
   return spread > 0 ? `+${spread}` : `${spread}`;
+}
+
+/** Whether `teamId` won `game`, once the game is final */
+export function pickResult(game: BoardGame, teamId: number): PickResult | null {
+  if (!game.completed || game.home_points === null || game.away_points === null) return null;
+  if (game.home_points === game.away_points) return null;
+  const homeWon = game.home_points > game.away_points;
+  return homeWon === (teamId === game.home_id) ? "win" : "loss";
 }
 
 function formatDates(games: BoardGame[]) {
@@ -146,7 +158,13 @@ export function buildBoard(board: SheetBoard, now: Date) {
       const picks = gameViews.flatMap((g) => {
         const pickedTeamId = pickByGame.get(g.game.id);
         if (pickedTeamId === undefined) return [];
-        return [{ game: g, team: pickedTeamId === g.home.id ? g.home : g.away }];
+        return [
+          {
+            game: g,
+            team: pickedTeamId === g.home.id ? g.home : g.away,
+            result: pickResult(g.game, pickedTeamId),
+          },
+        ];
       });
 
       return { week, state, dates: formatDates(games), games: gameViews, picks };
