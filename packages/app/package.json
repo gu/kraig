@@ -11,6 +11,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "generate-db-types": "kysely-codegen --out-file db/types/index.d.ts",
+    "migrate": "auth migrate --config src/lib/auth.ts --yes && kysely migrate:latest",
     "seed-external-data": "node scripts/seed_db.ts"
   },
   "dependencies": {
@@ -24,7 +25,7 @@
     "@tanstack/react-router": "latest",
     "@tanstack/react-router-devtools": "latest",
     "@tanstack/react-start": "latest",
-    "better-auth": "^1.7.1",
+    "better-auth": "1.7.7",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.2.5",
     "date-fns": "^4.4.0",
@@ -51,6 +52,7 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^6.0.1",
+    "auth": "1.7.7",
     "typescript": "^6.0.2",
     "vite": "^8.0.0"
   }
