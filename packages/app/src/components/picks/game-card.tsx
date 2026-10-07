@@ -3,14 +3,18 @@ import { cn } from "@/lib/utils";
 import { PICKS_PER_WEEK } from "#/lib/picks";
 import { ArrowLeftRightIcon, CheckIcon, LockIcon } from "lucide-react";
 import { format } from "date-fns";
-import { formatSpread, rankedName, type GameView, type TeamView } from "./board";
+import { formatSpread, isFinal, rankedName, type GameView, type TeamView } from "./board";
 import { TeamLogo } from "./team-logo";
 import { TeamName } from "./team-name";
+import { pickTone } from "./week-picks-card";
 
 const PICKABLE_STATES = ["open", "swap", "picked"];
 
 function teamNote(team: TeamView, game: GameView) {
   const spread = formatSpread(team.spread);
+  if (team.state === "lockedPick" && team.result !== null) {
+    return `Your pick · ${team.result === "win" ? "Won" : "Lost"}`;
+  }
   switch (team.state) {
     case "open":
     case "closed":
@@ -24,7 +28,7 @@ function teamNote(team: TeamView, game: GameView) {
     case "used":
       return `Picked in week ${team.usedWeek}`;
     case "started":
-      return "Game started";
+      return team.points === null ? "Game started" : "Final";
     case "full":
       return `${PICKS_PER_WEEK} of ${PICKS_PER_WEEK} picks made`;
     case "unavailable":
@@ -45,6 +49,9 @@ function TeamPickButton({
 }) {
   const pickable = PICKABLE_STATES.includes(team.state);
   const muted = team.state === "used" || team.state === "started" || team.state === "unavailable";
+  const final = team.points !== null;
+  // A final pick is colored by whether it won
+  const resultTone = team.state === "lockedPick" && team.result !== null && pickTone(team, false);
 
   return (
     <button
@@ -57,7 +64,8 @@ function TeamPickButton({
         pickable && "hover:bg-muted",
         team.state === "picked" &&
           "border-primary bg-primary/10 ring-1 ring-primary hover:bg-primary/15",
-        team.state === "lockedPick" && "border-primary/40 bg-primary/10",
+        team.state === "lockedPick" &&
+          (resultTone ? [resultTone.border, resultTone.bg] : "border-primary/40 bg-primary/10"),
         muted && "bg-muted text-muted-foreground",
         team.state === "full" && "border-dashed text-muted-foreground",
       )}
@@ -71,6 +79,7 @@ function TeamPickButton({
           className={cn(
             "truncate text-xs text-muted-foreground",
             (team.state === "picked" || team.state === "lockedPick") && "font-medium text-primary",
+            resultTone && (team.result === "win" ? "text-success" : "text-destructive"),
           )}
         >
           {teamNote(team, game)}
@@ -80,8 +89,19 @@ function TeamPickButton({
       {team.state === "swap" && (
         <ArrowLeftRightIcon className="size-4 text-muted-foreground" aria-hidden="true" />
       )}
-      {((team.state === "lockedPick" && game.started) || team.state === "started") && (
-        <LockIcon className="size-4" aria-hidden="true" />
+      {final ? (
+        <span
+          className={cn(
+            "text-lg tabular-nums",
+            team.result === "win" ? "font-bold text-foreground" : "text-muted-foreground",
+          )}
+        >
+          {team.points}
+        </span>
+      ) : (
+        ((team.state === "lockedPick" && game.started) || team.state === "started") && (
+          <LockIcon className="size-4" aria-hidden="true" />
+        )
       )}
     </button>
   );
@@ -117,7 +137,9 @@ export function GameCard({
             {format(new Date(game.game.start_date), "EEE, MMM d")}
           </span>
         )}
-        {game.started ? (
+        {isFinal(game.game) ? (
+          <Badge variant="secondary">Final</Badge>
+        ) : game.started ? (
           <Badge variant="secondary">Started</Badge>
         ) : (
           <span className="text-sm font-semibold">

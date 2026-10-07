@@ -22,6 +22,10 @@ export interface TeamView {
   spread: number | null;
   state: TeamPickState;
   usedWeek: number | null;
+  /** Final score, null until the game is final */
+  points: number | null;
+  /** Null until the game is final (or if it ended in a tie) */
+  result: PickResult | null;
 }
 
 export interface GameView {
@@ -59,11 +63,15 @@ export function formatSpread(spread: number | null) {
   return spread > 0 ? `+${spread}` : `${spread}`;
 }
 
+/** Whether `game` is final with a score */
+export function isFinal(game: BoardGame) {
+  return game.completed && game.home_points !== null && game.away_points !== null;
+}
+
 /** Whether `teamId` won `game`, once the game is final */
 export function pickResult(game: BoardGame, teamId: number): PickResult | null {
-  if (!game.completed || game.home_points === null || game.away_points === null) return null;
-  if (game.home_points === game.away_points) return null;
-  const homeWon = game.home_points > game.away_points;
+  if (!isFinal(game) || game.home_points === game.away_points) return null;
+  const homeWon = game.home_points! > game.away_points!;
   return homeWon === (teamId === game.home_id) ? "win" : "loss";
 }
 
@@ -142,6 +150,8 @@ export function buildBoard(board: SheetBoard, now: Date) {
                 : -game.home_spread,
           state: pickState,
           usedWeek,
+          points: isFinal(game) ? (side === "home" ? game.home_points : game.away_points) : null,
+          result: pickResult(game, id),
         };
       };
 
@@ -162,7 +172,7 @@ export function buildBoard(board: SheetBoard, now: Date) {
           {
             game: g,
             team: pickedTeamId === g.home.id ? g.home : g.away,
-            result: pickResult(g.game, pickedTeamId),
+            result: pickedTeamId === g.home.id ? g.home.result : g.away.result,
           },
         ];
       });

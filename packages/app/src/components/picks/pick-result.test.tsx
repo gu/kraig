@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { SheetBoard } from "#/hooks/use-sheet-picks";
 import { buildBoard } from "./board";
+import { GameCard } from "./game-card";
 import { WeekPicksCard } from "./week-picks-card";
 import { WeekPicksStrip } from "./week-picks-strip";
 
@@ -89,5 +90,29 @@ describe("pick results", () => {
     expect(html).toContain("at Georgia · L 10–24");
     expect(html.match(/border-success bg-success\/10/g)).toHaveLength(1);
     expect(html.match(/border-destructive bg-destructive\/10/g)).toHaveLength(1);
+  });
+
+  it("shows the final score and pick result in the games listing", () => {
+    const card = (index: number) =>
+      renderToStaticMarkup(
+        <GameCard game={weeks[0].games[index]} busy={false} onPick={() => {}} />,
+      );
+
+    const won = card(0);
+    expect(won).toContain("Final");
+    expect(won).not.toContain("Started");
+    expect(won).toContain("Your pick · Won");
+    expect(won).toContain(">31</span>");
+    expect(won).toContain(">17</span>");
+    expect(won.match(/border-success bg-success\/10/g)).toHaveLength(1);
+
+    const lost = card(1);
+    expect(lost).toContain("Your pick · Lost");
+    expect(lost.match(/border-destructive bg-destructive\/10/g)).toHaveLength(1);
+
+    // Scores without CFBD marking the game completed aren't final yet
+    const pending = card(2);
+    expect(pending).not.toContain("Final");
+    expect(pending).not.toContain(">7</span>");
   });
 });

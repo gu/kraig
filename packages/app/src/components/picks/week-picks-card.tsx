@@ -36,7 +36,7 @@ export function pickDetail(pick: PickView) {
 }
 
 /** Pick slot colors: green for a win, red for a loss, otherwise primary (brighter while removable) */
-export function pickTone(pick: PickView, removable: boolean) {
+export function pickTone(pick: Pick<PickView, "result">, removable: boolean) {
   if (pick.result === "win")
     return { border: "border-success", bg: "bg-success/10", ring: "ring-success" };
   if (pick.result === "loss") {
