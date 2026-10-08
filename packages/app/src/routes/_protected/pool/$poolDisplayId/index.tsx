@@ -8,10 +8,20 @@ import {
   CardHeader,
   CardTitle,
 } from "#/components/ui/card";
-import { Item, ItemContent, ItemGroup, ItemMedia, ItemTitle } from "#/components/ui/item";
+import { LeaderboardCard } from "#/components/leaderboard/leaderboard-card";
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemMedia,
+  ItemTitle,
+} from "#/components/ui/item";
 import { Skeleton } from "#/components/ui/skeleton";
 import { toast } from "#/components/ui/toast";
+import { useLeaderboard } from "#/hooks/use-leaderboard";
 import { usePool } from "#/hooks/use-pools";
+import { formatStanding } from "#/lib/scoring";
 import { useSheets } from "#/hooks/use-sheets";
 import { cn } from "@/lib/utils";
 import { queryClient } from "#/lib/query-client";
@@ -71,6 +81,15 @@ function PoolDashboard() {
 
   const { data: pool } = usePool(poolDisplayId);
   const { data: sheets } = useSheets({ poolDisplayId });
+  const { data: leaderboard } = useLeaderboard(poolDisplayId);
+
+  /** e.g. "T-3rd of 12 · 36 pts", once the pool has results */
+  const sheetSummary = (sheetId: number) => {
+    const row = leaderboard?.rows.find((r) => r.id === sheetId);
+    if (!leaderboard || leaderboard.throughWeek === null || !row) return null;
+    const standing = formatStanding({ ...row, of: leaderboard.rows.length });
+    return `${standing} · ${row.points} ${row.points === 1 ? "pt" : "pts"}`;
+  };
 
   const maxSheets = pool?.settings.maxSheets;
   const sheetCount = sheets?.length ?? 0;
@@ -95,6 +114,7 @@ function PoolDashboard() {
       });
     }
     queryClient.invalidateQueries({ queryKey: ["sheets"] });
+    queryClient.invalidateQueries({ queryKey: ["leaderboard", poolDisplayId] });
   };
 
   return (
@@ -102,7 +122,13 @@ function PoolDashboard() {
       <div className="flex flex-col gap-4 p-4">
         <h1 className="text-2xl font-bold">{pool?.name}</h1>
 
-        <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {leaderboard ? (
+            <LeaderboardCard leaderboard={leaderboard} poolDisplayId={poolDisplayId} />
+          ) : (
+            <Skeleton className="h-80 w-full" />
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle>Your Sheets</CardTitle>
@@ -144,6 +170,9 @@ function PoolDashboard() {
                       </ItemMedia>
                       <ItemContent>
                         <ItemTitle>{sheet.name}</ItemTitle>
+                        {sheetSummary(sheet.id) && (
+                          <ItemDescription>{sheetSummary(sheet.id)}</ItemDescription>
+                        )}
                       </ItemContent>
                       <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" />
                     </Item>

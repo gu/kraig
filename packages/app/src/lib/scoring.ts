@@ -49,9 +49,14 @@ export function standing(
 
 /** e.g. "1st of 5" or "T-2nd of 5" */
 export function formatStanding({ rank, tied, of }: Standing) {
-  const tens = rank % 100;
-  const suffix = tens >= 11 && tens <= 13 ? "th" : (["th", "st", "nd", "rd"][rank % 10] ?? "th");
-  return `${tied ? "T-" : ""}${rank}${suffix} of ${of}`;
+  return `${tied ? "T-" : ""}${ordinal(rank)} of ${of}`;
+}
+
+/** e.g. 1st, 2nd, 11th, 23rd */
+export function ordinal(n: number) {
+  const tens = n % 100;
+  const suffix = tens >= 11 && tens <= 13 ? "th" : (["th", "st", "nd", "rd"][n % 10] ?? "th");
+  return `${n}${suffix}`;
 }
 
 /** e.g. "1 pt in weeks 1–4, 2 in weeks 5–8, 3 in weeks 9–12 and 4 from week 13 on" */

@@ -101,7 +101,7 @@ export function pickResult(
 
 /** The parts of a game scoring needs. Spelled out, since BoardGame is inferred from a server
  * function that scores sheets */
-interface ScoredGame {
+export interface ScoredGame {
   week: number;
   home_id: number;
   completed: boolean;

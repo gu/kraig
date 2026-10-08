@@ -1,15 +1,13 @@
 import { getOpenWeek } from "#/lib/picks";
 import { isConferenceInPool, toPoolSettings } from "#/lib/pool-settings";
 import { scoreSheet } from "#/components/picks/board";
+import { loadGamesWithLines } from "#/lib/games";
 import { queryClient } from "#/lib/query-client";
 import { authMiddleware } from "#/middleware/auth";
 import db from "@db/client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import z from "zod";
-
-// Sportsbooks to take the spread from, in order of preference
-const PREFERRED_PROVIDERS = ["DraftKings", "ESPN Bet", "Bovada"];
 
 /** The user's sheet, with the settings of the pool it's in */
 async function getOwnedSheet(userId: string, sheetDisplayId: string) {
@@ -37,29 +35,12 @@ const getSheetBoard = createServerFn({ method: "GET" })
   .handler(async ({ context, data }) => {
     const sheet = await getOwnedSheet(context.user.id, data.sheetDisplayId);
 
-    const [games, teams, lines, rankings, poolSheets, poolPicks] = await Promise.all([
-      db
-        .selectFrom("ext_game")
-        .select([
-          "id",
-          "week",
-          "start_date",
-          "home_id",
-          "home_team",
-          "away_id",
-          "away_team",
-          "completed",
-          "home_points",
-          "away_points",
-        ])
-        .orderBy("start_date")
-        .orderBy("id")
-        .execute(),
+    const [boardGames, teams, rankings, poolSheets, poolPicks] = await Promise.all([
+      loadGamesWithLines(),
       db
         .selectFrom("ext_team")
         .select(["id", "school", "abbreviation", "logo_url", "conference"])
         .execute(),
-      db.selectFrom("ext_line").select(["game_id", "provider", "spread", "over_under"]).execute(),
       // AP Top 25. A week's poll is the ranking teams carry into that week's games
       db.selectFrom("ext_ranking").select(["week", "team_id", "rank"]).execute(),
       db.selectFrom("sheet").select("id").where("pool_id", "=", sheet.poolId).execute(),
@@ -74,29 +55,6 @@ const getSheetBoard = createServerFn({ method: "GET" })
     const picks = poolPicks
       .filter((p) => p.sheet_id === sheet.id)
       .map(({ game_id, team_id }) => ({ game_id, team_id }));
-
-    const linesByGame = new Map<number, typeof lines>();
-    for (const line of lines) {
-      linesByGame.set(line.game_id, [...(linesByGame.get(line.game_id) ?? []), line]);
-    }
-    const rank = (provider: string) => {
-      const index = PREFERRED_PROVIDERS.indexOf(provider);
-      return index === -1 ? PREFERRED_PROVIDERS.length : index;
-    };
-
-    const boardGames = games.map((game) => {
-      const line = (linesByGame.get(game.id) ?? [])
-        .filter((l) => l.spread !== null)
-        .sort((a, b) => rank(a.provider) - rank(b.provider))[0];
-
-      return {
-        ...game,
-        start_date: game.start_date.toISOString(),
-        // CFBD spreads are relative to the home team
-        home_spread: line?.spread ?? null,
-        over_under: line?.over_under ?? null,
-      };
-    });
 
     const gamesById = new Map(boardGames.map((g) => [g.id, g]));
     const picksBySheet = new Map<number, typeof poolPicks>();

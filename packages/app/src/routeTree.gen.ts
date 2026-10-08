@@ -15,6 +15,7 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ProtectedIndexRouteImport } from './routes/_protected/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ProtectedPoolPoolDisplayIdIndexRouteImport } from './routes/_protected/pool/$poolDisplayId/index'
+import { Route as ProtectedPoolPoolDisplayIdLeaderboardRouteImport } from './routes/_protected/pool/$poolDisplayId/leaderboard'
 import { Route as ProtectedPoolPoolDisplayIdSheetSheetDisplayIdRouteImport } from './routes/_protected/pool/$poolDisplayId/sheet/$sheetDisplayId'
 
 const ProtectedRoute = ProtectedRouteImport.update({
@@ -47,6 +48,12 @@ const ProtectedPoolPoolDisplayIdIndexRoute =
     path: '/pool/$poolDisplayId/',
     getParentRoute: () => ProtectedRoute,
   } as any)
+const ProtectedPoolPoolDisplayIdLeaderboardRoute =
+  ProtectedPoolPoolDisplayIdLeaderboardRouteImport.update({
+    id: '/pool/$poolDisplayId/leaderboard',
+    path: '/pool/$poolDisplayId/leaderboard',
+    getParentRoute: () => ProtectedRoute,
+  } as any)
 const ProtectedPoolPoolDisplayIdSheetSheetDisplayIdRoute =
   ProtectedPoolPoolDisplayIdSheetSheetDisplayIdRouteImport.update({
     id: '/pool/$poolDisplayId/sheet/$sheetDisplayId',
@@ -59,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/pool/$poolDisplayId/leaderboard': typeof ProtectedPoolPoolDisplayIdLeaderboardRoute
   '/pool/$poolDisplayId/': typeof ProtectedPoolPoolDisplayIdIndexRoute
   '/pool/$poolDisplayId/sheet/$sheetDisplayId': typeof ProtectedPoolPoolDisplayIdSheetSheetDisplayIdRoute
 }
@@ -67,6 +75,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/': typeof ProtectedIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/pool/$poolDisplayId/leaderboard': typeof ProtectedPoolPoolDisplayIdLeaderboardRoute
   '/pool/$poolDisplayId': typeof ProtectedPoolPoolDisplayIdIndexRoute
   '/pool/$poolDisplayId/sheet/$sheetDisplayId': typeof ProtectedPoolPoolDisplayIdSheetSheetDisplayIdRoute
 }
@@ -77,6 +86,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/_protected/': typeof ProtectedIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/_protected/pool/$poolDisplayId/leaderboard': typeof ProtectedPoolPoolDisplayIdLeaderboardRoute
   '/_protected/pool/$poolDisplayId/': typeof ProtectedPoolPoolDisplayIdIndexRoute
   '/_protected/pool/$poolDisplayId/sheet/$sheetDisplayId': typeof ProtectedPoolPoolDisplayIdSheetSheetDisplayIdRoute
 }
@@ -87,6 +97,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/api/auth/$'
+    | '/pool/$poolDisplayId/leaderboard'
     | '/pool/$poolDisplayId/'
     | '/pool/$poolDisplayId/sheet/$sheetDisplayId'
   fileRoutesByTo: FileRoutesByTo
@@ -95,6 +106,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/'
     | '/api/auth/$'
+    | '/pool/$poolDisplayId/leaderboard'
     | '/pool/$poolDisplayId'
     | '/pool/$poolDisplayId/sheet/$sheetDisplayId'
   id:
@@ -104,6 +116,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/_protected/'
     | '/api/auth/$'
+    | '/_protected/pool/$poolDisplayId/leaderboard'
     | '/_protected/pool/$poolDisplayId/'
     | '/_protected/pool/$poolDisplayId/sheet/$sheetDisplayId'
   fileRoutesById: FileRoutesById
@@ -159,6 +172,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedPoolPoolDisplayIdIndexRouteImport
       parentRoute: typeof ProtectedRoute
     }
+    '/_protected/pool/$poolDisplayId/leaderboard': {
+      id: '/_protected/pool/$poolDisplayId/leaderboard'
+      path: '/pool/$poolDisplayId/leaderboard'
+      fullPath: '/pool/$poolDisplayId/leaderboard'
+      preLoaderRoute: typeof ProtectedPoolPoolDisplayIdLeaderboardRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
     '/_protected/pool/$poolDisplayId/sheet/$sheetDisplayId': {
       id: '/_protected/pool/$poolDisplayId/sheet/$sheetDisplayId'
       path: '/pool/$poolDisplayId/sheet/$sheetDisplayId'
@@ -171,12 +191,15 @@ declare module '@tanstack/react-router' {
 
 interface ProtectedRouteChildren {
   ProtectedIndexRoute: typeof ProtectedIndexRoute
+  ProtectedPoolPoolDisplayIdLeaderboardRoute: typeof ProtectedPoolPoolDisplayIdLeaderboardRoute
   ProtectedPoolPoolDisplayIdIndexRoute: typeof ProtectedPoolPoolDisplayIdIndexRoute
   ProtectedPoolPoolDisplayIdSheetSheetDisplayIdRoute: typeof ProtectedPoolPoolDisplayIdSheetSheetDisplayIdRoute
 }
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedIndexRoute: ProtectedIndexRoute,
+  ProtectedPoolPoolDisplayIdLeaderboardRoute:
+    ProtectedPoolPoolDisplayIdLeaderboardRoute,
   ProtectedPoolPoolDisplayIdIndexRoute: ProtectedPoolPoolDisplayIdIndexRoute,
   ProtectedPoolPoolDisplayIdSheetSheetDisplayIdRoute:
     ProtectedPoolPoolDisplayIdSheetSheetDisplayIdRoute,
