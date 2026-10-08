@@ -74,7 +74,7 @@ export function formatSpread(spread: number | null) {
 }
 
 /** Whether `game` is final with a score */
-export function isFinal(game: BoardGame) {
+export function isFinal(game: Pick<ScoredGame, "completed" | "home_points" | "away_points">) {
   return game.completed && game.home_points !== null && game.away_points !== null;
 }
 
@@ -84,7 +84,7 @@ export function isFinal(game: BoardGame) {
  * Null for a tie or a push
  */
 export function pickResult(
-  game: BoardGame,
+  game: ScoredGame,
   teamId: number,
   pickType: PickType = "outright",
 ): PickResult | null {
@@ -97,6 +97,34 @@ export function pickResult(
   const margin = ours - theirs + (isHome ? homeSpread : -homeSpread);
   if (margin === 0) return null;
   return margin > 0 ? "win" : "loss";
+}
+
+/** The parts of a game scoring needs. Spelled out, since BoardGame is inferred from a server
+ * function that scores sheets */
+interface ScoredGame {
+  week: number;
+  home_id: number;
+  completed: boolean;
+  home_points: number | null;
+  away_points: number | null;
+  home_spread: number | null;
+}
+
+/** A sheet's season points, and how many of its picks have been decided */
+export function scoreSheet(
+  picks: readonly { game_id: number; team_id: number }[],
+  gamesById: ReadonlyMap<number, ScoredGame>,
+  pickType: PickType,
+) {
+  let points = 0;
+  let decided = 0;
+  for (const pick of picks) {
+    const game = gamesById.get(pick.game_id);
+    if (!game || !isFinal(game)) continue;
+    decided++;
+    points += pickPoints(pickResult(game, pick.team_id, pickType), game.week, true) ?? 0;
+  }
+  return { points, decided };
 }
 
 function formatDates(games: BoardGame[]) {

@@ -1,5 +1,6 @@
 import { getOpenWeek } from "#/lib/picks";
 import { isConferenceInPool, toPoolSettings } from "#/lib/pool-settings";
+import { scoreSheet } from "#/components/picks/board";
 import { queryClient } from "#/lib/query-client";
 import { authMiddleware } from "#/middleware/auth";
 import db from "@db/client";
@@ -17,6 +18,7 @@ async function getOwnedSheet(userId: string, sheetDisplayId: string) {
     .innerJoin("pool", "pool.id", "sheet.pool_id")
     .select([
       "sheet.id",
+      "sheet.pool_id",
       "pool.conferences",
       "pool.max_sheets",
       "pool.picks_per_week",
@@ -26,7 +28,7 @@ async function getOwnedSheet(userId: string, sheetDisplayId: string) {
     .where("sheet.display_id", "=", sheetDisplayId)
     .executeTakeFirstOrThrow();
 
-  return { id: sheet.id, settings: toPoolSettings(sheet) };
+  return { id: sheet.id, poolId: sheet.pool_id, settings: toPoolSettings(sheet) };
 }
 
 const getSheetBoard = createServerFn({ method: "GET" })
@@ -35,7 +37,7 @@ const getSheetBoard = createServerFn({ method: "GET" })
   .handler(async ({ context, data }) => {
     const sheet = await getOwnedSheet(context.user.id, data.sheetDisplayId);
 
-    const [games, teams, lines, rankings, picks] = await Promise.all([
+    const [games, teams, lines, rankings, poolSheets, poolPicks] = await Promise.all([
       db
         .selectFrom("ext_game")
         .select([
@@ -60,12 +62,18 @@ const getSheetBoard = createServerFn({ method: "GET" })
       db.selectFrom("ext_line").select(["game_id", "provider", "spread", "over_under"]).execute(),
       // AP Top 25. A week's poll is the ranking teams carry into that week's games
       db.selectFrom("ext_ranking").select(["week", "team_id", "rank"]).execute(),
+      db.selectFrom("sheet").select("id").where("pool_id", "=", sheet.poolId).execute(),
+      // Every sheet's picks in the pool, for the standings
       db
         .selectFrom("sheet_pick")
-        .select(["game_id", "team_id"])
-        .where("sheet_id", "=", sheet.id)
+        .innerJoin("sheet", "sheet.id", "sheet_pick.sheet_id")
+        .select(["sheet_pick.sheet_id", "sheet_pick.game_id", "sheet_pick.team_id"])
+        .where("sheet.pool_id", "=", sheet.poolId)
         .execute(),
     ]);
+    const picks = poolPicks
+      .filter((p) => p.sheet_id === sheet.id)
+      .map(({ game_id, team_id }) => ({ game_id, team_id }));
 
     const linesByGame = new Map<number, typeof lines>();
     for (const line of lines) {
@@ -76,24 +84,38 @@ const getSheetBoard = createServerFn({ method: "GET" })
       return index === -1 ? PREFERRED_PROVIDERS.length : index;
     };
 
-    return {
-      games: games.map((game) => {
-        const line = (linesByGame.get(game.id) ?? [])
-          .filter((l) => l.spread !== null)
-          .sort((a, b) => rank(a.provider) - rank(b.provider))[0];
+    const boardGames = games.map((game) => {
+      const line = (linesByGame.get(game.id) ?? [])
+        .filter((l) => l.spread !== null)
+        .sort((a, b) => rank(a.provider) - rank(b.provider))[0];
 
-        return {
-          ...game,
-          start_date: game.start_date.toISOString(),
-          // CFBD spreads are relative to the home team
-          home_spread: line?.spread ?? null,
-          over_under: line?.over_under ?? null,
-        };
-      }),
+      return {
+        ...game,
+        start_date: game.start_date.toISOString(),
+        // CFBD spreads are relative to the home team
+        home_spread: line?.spread ?? null,
+        over_under: line?.over_under ?? null,
+      };
+    });
+
+    const gamesById = new Map(boardGames.map((g) => [g.id, g]));
+    const picksBySheet = new Map<number, typeof poolPicks>();
+    for (const pick of poolPicks) {
+      picksBySheet.set(pick.sheet_id, [...(picksBySheet.get(pick.sheet_id) ?? []), pick]);
+    }
+
+    return {
+      games: boardGames,
       teams,
       rankings,
       picks,
       pool: sheet.settings,
+      sheetId: sheet.id,
+      // Points for every sheet in the pool, this one included
+      standings: poolSheets.map(({ id }) => ({
+        sheetId: id,
+        ...scoreSheet(picksBySheet.get(id) ?? [], gamesById, sheet.settings.pickType),
+      })),
     };
   });
 

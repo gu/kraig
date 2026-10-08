@@ -32,6 +32,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { LockIcon, SearchIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { standing } from "#/lib/scoring";
 import z from "zod";
 
 export const Route = createFileRoute("/_protected/pool/$poolDisplayId/sheet/$sheetDisplayId")({
@@ -139,7 +140,9 @@ function Sheet() {
               <EditSheetNameDialog sheetDisplayId={sheetDisplayId} currentName={sheet.name} />
             )}
           </div>
-          {weeks.length > 0 && <SheetStats weeks={weeks} />}
+          {weeks.length > 0 && boardData && (
+            <SheetStats weeks={weeks} standing={standing(boardData.standings, boardData.sheetId)} />
+          )}
         </CardHeader>
       </Card>
 

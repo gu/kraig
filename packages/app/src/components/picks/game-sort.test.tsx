@@ -44,6 +44,8 @@ const boardData: SheetBoard = {
   rankings: [],
   picks: [],
   pool: DEFAULT_POOL_SETTINGS,
+  sheetId: 1,
+  standings: [],
 };
 
 const games = buildBoard(boardData, now).weeks[0].games;

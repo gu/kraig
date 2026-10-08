@@ -66,6 +66,8 @@ const boardData: SheetBoard = {
     { game_id: 20, team_id: 3 },
   ],
   pool: DEFAULT_POOL_SETTINGS,
+  sheetId: 1,
+  standings: [],
 };
 
 const { weeks } = buildBoard(boardData, now);
@@ -128,7 +130,7 @@ describe("pick results", () => {
   it("totals the season record across weeks", () => {
     expect(sheetStats(weeks)).toEqual({ points: 1, wins: 1, losses: 1, pending: 2, winRate: 0.5 });
 
-    const html = renderToStaticMarkup(<SheetStats weeks={weeks} />);
+    const html = renderToStaticMarkup(<SheetStats weeks={weeks} standing={null} />);
     expect(html).toContain("Won</dt><dd");
     expect(html).toContain("text-success");
     expect(html).toContain("text-destructive");
@@ -143,7 +145,7 @@ describe("pick results", () => {
       pending: 1,
       winRate: null,
     });
-    const html = renderToStaticMarkup(<SheetStats weeks={[weeks[1]]} />);
+    const html = renderToStaticMarkup(<SheetStats weeks={[weeks[1]]} standing={null} />);
     expect(html).toContain(">–</dd>");
     expect(html).not.toContain("text-success");
   });

@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { formatStanding, type Standing } from "#/lib/scoring";
 import { isFinal, type WeekView } from "./board";
 
 /** Season pick record across every week */
@@ -21,11 +22,19 @@ function Stat({ label, value, className }: { label: string; value: string; class
   );
 }
 
-export function SheetStats({ weeks }: { weeks: WeekView[] }) {
+export function SheetStats({
+  weeks,
+  standing,
+}: {
+  weeks: WeekView[];
+  /** Rank among the pool's sheets, null until any pick in the pool is decided */
+  standing: Standing | null;
+}) {
   const { points, wins, losses, pending, winRate } = sheetStats(weeks);
 
   return (
     <dl className="flex flex-wrap gap-x-6 gap-y-2" aria-label="Season record">
+      <Stat label="Standing" value={standing === null ? "–" : formatStanding(standing)} />
       <Stat label="Points" value={`${points}`} />
       <Stat label="Won" value={`${wins}`} className={wins > 0 ? "text-success" : undefined} />
       <Stat

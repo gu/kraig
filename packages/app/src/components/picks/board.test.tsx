@@ -41,6 +41,8 @@ const board = (overrides: Partial<SheetBoard> = {}): SheetBoard => ({
   ],
   picks: [],
   pool: DEFAULT_POOL_SETTINGS,
+  sheetId: 1,
+  standings: [],
   ...overrides,
 });
 

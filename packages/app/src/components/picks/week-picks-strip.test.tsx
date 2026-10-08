@@ -49,6 +49,8 @@ const boardData: SheetBoard = {
     { game_id: 21, team_id: 3 },
   ],
   pool: DEFAULT_POOL_SETTINGS,
+  sheetId: 1,
+  standings: [],
 };
 
 const weeks = buildBoard(boardData, now).weeks;

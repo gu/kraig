@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { SheetBoard } from "#/hooks/use-sheet-picks";
 import { DEFAULT_POOL_SETTINGS } from "#/lib/pool-settings";
-import { describeScoring, pickPoints, winValue } from "#/lib/scoring";
+import { describeScoring, formatStanding, pickPoints, standing, winValue } from "#/lib/scoring";
 import { RulesCard } from "#/components/rules-card";
-import { buildBoard } from "./board";
+import { buildBoard, scoreSheet } from "./board";
 import { SheetStats, sheetStats } from "./sheet-stats";
 import { pickDetail, WeekPicksCard } from "./week-picks-card";
 import { WeekTabs } from "./week-tabs";
@@ -69,6 +69,8 @@ const boardData = (overrides: Partial<SheetBoard> = {}): SheetBoard => ({
     { game_id: 130, team_id: 4 }, // week 13, not played yet
   ],
   pool: DEFAULT_POOL_SETTINGS,
+  sheetId: 1,
+  standings: [],
   ...overrides,
 });
 
@@ -118,7 +120,9 @@ describe("board points", () => {
 
   it("adds up the season in the sheet stats", () => {
     expect(sheetStats(weeks).points).toBe(4);
-    expect(renderToStaticMarkup(<SheetStats weeks={weeks} />)).toMatch(/Points<\/dt><dd[^>]*>4</);
+    expect(renderToStaticMarkup(<SheetStats weeks={weeks} standing={null} />)).toMatch(
+      /Points<\/dt><dd[^>]*>4</,
+    );
   });
 
   it("shows the points each pick earned", () => {
@@ -152,6 +156,64 @@ describe("scoring rules", () => {
     );
     expect(renderToStaticMarkup(<RulesCard settings={DEFAULT_POOL_SETTINGS} />)).toContain(
       "Each winning pick earns 1 pt in weeks 1–4",
+    );
+  });
+});
+
+describe("standings", () => {
+  const sheets = [
+    { sheetId: 1, points: 12, decided: 8 },
+    { sheetId: 2, points: 20, decided: 8 },
+    { sheetId: 3, points: 12, decided: 8 },
+    { sheetId: 4, points: 5, decided: 8 },
+  ];
+
+  it("ranks by points, sharing a rank on ties", () => {
+    expect(standing(sheets, 2)).toEqual({ rank: 1, tied: false, of: 4 });
+    expect(standing(sheets, 1)).toEqual({ rank: 2, tied: true, of: 4 });
+    expect(standing(sheets, 3)).toEqual({ rank: 2, tied: true, of: 4 });
+    expect(standing(sheets, 4)).toEqual({ rank: 4, tied: false, of: 4 });
+  });
+
+  it("has no standing until a pick in the pool is decided", () => {
+    const fresh = sheets.map((s) => ({ ...s, points: 0, decided: 0 }));
+    expect(standing(fresh, 1)).toBeNull();
+    expect(standing(sheets, 99)).toBeNull();
+  });
+
+  it("formats ordinals", () => {
+    const format = (rank: number, tied = false) => formatStanding({ rank, tied, of: 30 });
+    expect([1, 2, 3, 4, 11, 12, 13, 21, 22, 23].map((r) => format(r))).toEqual([
+      "1st of 30",
+      "2nd of 30",
+      "3rd of 30",
+      "4th of 30",
+      "11th of 30",
+      "12th of 30",
+      "13th of 30",
+      "21st of 30",
+      "22nd of 30",
+      "23rd of 30",
+    ]);
+    expect(format(2, true)).toBe("T-2nd of 30");
+  });
+
+  it("scores each sheet's decided picks", () => {
+    const data = boardData();
+    const gamesById = new Map(data.games.map((g) => [g.id, g]));
+    expect(scoreSheet(data.picks, gamesById, "outright")).toEqual({ points: 4, decided: 5 });
+    // The same picks the board totals
+    expect(sheetStats(buildBoard(data, now).weeks).points).toBe(4);
+  });
+
+  it("shows the standing first in the sheet stats", () => {
+    const { weeks } = buildBoard(boardData(), now);
+    const html = renderToStaticMarkup(
+      <SheetStats weeks={weeks} standing={{ rank: 2, tied: true, of: 4 }} />,
+    );
+    expect(html).toMatch(/^<dl[^>]*><div[^>]*><dt[^>]*>Standing<\/dt><dd[^>]*>T-2nd of 4</);
+    expect(renderToStaticMarkup(<SheetStats weeks={weeks} standing={null} />)).toMatch(
+      /Standing<\/dt><dd[^>]*>–</,
     );
   });
 });

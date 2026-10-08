@@ -65,6 +65,8 @@ const board = (pool: Partial<PoolSettings>, picks: SheetBoard["picks"] = []): Sh
   rankings: [],
   picks,
   pool: { ...DEFAULT_POOL_SETTINGS, ...pool },
+  sheetId: 1,
+  standings: [],
 });
 
 describe("pickResult", () => {
